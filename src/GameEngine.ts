@@ -28,6 +28,8 @@ export class GameEngine {
   private lastTime: number = 0;
   private animationId: number | null = null;
   private inputQueue: InputEvent[] = [];
+  private lastPowerUpSpawnTime: number = 0;
+  private powerUpSpawnInterval: number = 10000; // 10秒
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -226,6 +228,7 @@ export class GameEngine {
   public startGame(): void {
     this.initializeGame();
     this.gameState.state = 'playing';
+    this.lastPowerUpSpawnTime = Date.now(); // 初始化道具生成時間
     this.gameLoop();
   }
 
@@ -269,6 +272,7 @@ export class GameEngine {
     this.initializeGame();
     this.gameState.state = 'playing';
     this.lastTime = performance.now();
+    this.lastPowerUpSpawnTime = Date.now(); // 重置道具生成時間
     this.gameLoop();
     
     console.log('GameEngine: 遊戲重新開始完成，狀態:', this.gameState.state);
@@ -343,6 +347,9 @@ export class GameEngine {
     
     // 更新道具
     this.systems.powerUp.updatePowerUps(this.gameState.powerUps, this.gameState.players);
+    
+    // 定時生成道具
+    this.spawnRandomPowerUps();
     
     // 檢查碰撞
     this.checkCollisions();
@@ -425,6 +432,54 @@ export class GameEngine {
       Math.pow(obj1.pixelY - obj2.pixelY, 2)
     );
     return distance < TILE_SIZE / 2;
+  }
+
+  private spawnRandomPowerUps(): void {
+    const currentTime = Date.now();
+    
+    // 檢查是否到了生成道具的時間
+    if (currentTime - this.lastPowerUpSpawnTime >= this.powerUpSpawnInterval) {
+      this.lastPowerUpSpawnTime = currentTime;
+      
+      // 生成1-3個道具
+      const powerUpCount = Math.floor(Math.random() * 3) + 1; // 1-3個
+      console.log(`定時生成 ${powerUpCount} 個道具`);
+      
+      for (let i = 0; i < powerUpCount; i++) {
+        this.spawnRandomPowerUp();
+      }
+    }
+  }
+
+  private spawnRandomPowerUp(): void {
+    // 尋找空閒的位置
+    const emptyPositions: {x: number, y: number}[] = [];
+    
+    for (let y = 0; y < this.gameState.map.length; y++) {
+      for (let x = 0; x < this.gameState.map[y].length; x++) {
+        const tile = this.gameState.map[y][x];
+        // 檢查是否為空地且沒有道具
+        if (tile.type === 0 && !tile.hasPowerUp) {
+          // 檢查是否已經有道具在這個位置
+          const existingPowerUp = this.gameState.powerUps.find(p => p.gridX === x && p.gridY === y);
+          if (!existingPowerUp) {
+            emptyPositions.push({x, y});
+          }
+        }
+      }
+    }
+    
+    // 如果有空閒位置，隨機選擇一個生成道具
+    if (emptyPositions.length > 0) {
+      const randomPos = emptyPositions[Math.floor(Math.random() * emptyPositions.length)];
+      const powerUp = this.systems.powerUp.generatePowerUpAt(randomPos.x, randomPos.y, this.gameState.map);
+      if (powerUp) {
+        this.gameState.powerUps.push(powerUp);
+        console.log(`道具生成在位置 (${randomPos.x}, ${randomPos.y})`);
+      }
+    } else {
+      console.log('沒有空閒位置生成道具');
+    }
   }
 
   private checkGameEnd(): void {
