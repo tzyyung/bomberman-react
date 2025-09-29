@@ -226,6 +226,46 @@ export class BombSystem {
     return tile.type === 0; // EMPTY
   }
 
+  private moveBombToPlayerFront(bomb: Bomb, player: Player, map: MapTile[][]): void {
+    // 計算玩家面前的位置
+    let frontX = player.gridX;
+    let frontY = player.gridY;
+    
+    switch (player.direction) {
+      case Direction.UP:
+        frontY = player.gridY - 1;
+        break;
+      case Direction.DOWN:
+        frontY = player.gridY + 1;
+        break;
+      case Direction.LEFT:
+        frontX = player.gridX - 1;
+        break;
+      case Direction.RIGHT:
+        frontX = player.gridX + 1;
+        break;
+    }
+    
+    // 檢查玩家面前的位置是否可以放置炸彈
+    if (this.canMoveBombTo(frontX, frontY, map)) {
+      // 恢復原位置的地圖格子類型
+      map[bomb.gridY][bomb.gridX].type = 0; // EMPTY
+      
+      // 移動炸彈到玩家面前
+      bomb.gridX = frontX;
+      bomb.gridY = frontY;
+      bomb.pixelX = frontX * TILE_SIZE + TILE_SIZE / 2;
+      bomb.pixelY = frontY * TILE_SIZE + TILE_SIZE / 2;
+      
+      // 更新新位置的地圖格子類型
+      map[frontY][frontX].type = 3; // BOMB
+      
+      console.log(`炸彈移動到玩家面前位置: (${frontX}, ${frontY})`);
+    } else {
+      console.log(`玩家面前位置 (${frontX}, ${frontY}) 無法放置炸彈`);
+    }
+  }
+
   private findBombNearPlayer(player: Player, bombs: Bomb[]): Bomb | null {
     // 檢查玩家當前位置是否有炸彈
     let bomb = bombs.find(b => 
@@ -237,25 +277,35 @@ export class BombSystem {
       return bomb;
     }
     
-    // 檢查玩家旁邊的炸彈（相鄰格子）
-    const adjacentPositions = [
-      { x: player.gridX - 1, y: player.gridY }, // 左
-      { x: player.gridX + 1, y: player.gridY }, // 右
-      { x: player.gridX, y: player.gridY - 1 }, // 上
-      { x: player.gridX, y: player.gridY + 1 }  // 下
-    ];
+    // 只檢查玩家面對方向的炸彈
+    let targetX = player.gridX;
+    let targetY = player.gridY;
     
-    for (const pos of adjacentPositions) {
-      bomb = bombs.find(b => 
-        b.gridX === pos.x && b.gridY === pos.y && !b.exploded
-      );
-      
-      if (bomb) {
-        console.log(`玩家 ${player.id} 旁邊有炸彈，位置: (${bomb.gridX}, ${bomb.gridY})`);
-        return bomb;
-      }
+    switch (player.direction) {
+      case Direction.UP:
+        targetY = player.gridY - 1;
+        break;
+      case Direction.DOWN:
+        targetY = player.gridY + 1;
+        break;
+      case Direction.LEFT:
+        targetX = player.gridX - 1;
+        break;
+      case Direction.RIGHT:
+        targetX = player.gridX + 1;
+        break;
     }
     
+    bomb = bombs.find(b => 
+      b.gridX === targetX && b.gridY === targetY && !b.exploded
+    );
+    
+    if (bomb) {
+      console.log(`玩家 ${player.id} 面前有炸彈，位置: (${bomb.gridX}, ${bomb.gridY})，方向: ${player.direction}`);
+      return bomb;
+    }
+    
+    console.log(`玩家 ${player.id} 面前沒有炸彈，方向: ${player.direction}`);
     return null;
   }
 
@@ -279,8 +329,11 @@ export class BombSystem {
       bomb.kickDistance = 0;
       bomb.maxKickDistance = player.kickCount || 1; // 根據踢炸彈道具數量設置最大踢動距離
       player.lastKickTime = Date.now();
+      
+      // 立即移動炸彈到玩家面前的位置
+      this.moveBombToPlayerFront(bomb, player, map);
     } else {
-      console.log(`玩家 ${player.id} 旁邊沒有炸彈可踢`);
+      console.log(`玩家 ${player.id} 面前沒有炸彈可踢`);
     }
   }
 

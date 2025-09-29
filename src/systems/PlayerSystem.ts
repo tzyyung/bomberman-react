@@ -53,6 +53,9 @@ export class PlayerSystem {
   public movePlayer(player: Player, direction: Direction, map: MapTile[][]): void {
     if (!player.alive) return;
     
+    // 首先更新玩家方向，無論是否能移動
+    player.direction = direction;
+    
     let newX = player.gridX;
     let newY = player.gridY;
     
@@ -75,10 +78,12 @@ export class PlayerSystem {
     if (this.canMoveTo(newX, newY, map)) {
       player.gridX = newX;
       player.gridY = newY;
-      player.direction = direction;
       // 立即更新像素位置，簡單直接
       player.pixelX = player.gridX * TILE_SIZE + TILE_SIZE / 2;
       player.pixelY = player.gridY * TILE_SIZE + TILE_SIZE / 2;
+      console.log(`玩家 ${player.id} 移動到 (${newX}, ${newY})`);
+    } else {
+      console.log(`玩家 ${player.id} 無法移動到 (${newX}, ${newY})，但方向已更新為 ${direction}`);
     }
   }
 
