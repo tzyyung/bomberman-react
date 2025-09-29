@@ -33,6 +33,7 @@ export class PowerUpSystem {
   public collectPowerUp(player: Player, powerUp: PowerUp): void {
     if (powerUp.collected) return;
     
+    console.log(`玩家 ${player.id} 收集到道具，類型: ${powerUp.type}`);
     powerUp.collected = true;
     this.applyPowerUpEffect(player, powerUp.type);
   }
@@ -41,25 +42,32 @@ export class PowerUpSystem {
     switch (type) {
       case PowerUpType.FIRE:
         player.bombPower++;
+        console.log(`玩家 ${player.id} 獲得火力道具，炸彈威力增加到: ${player.bombPower}`);
         break;
       case PowerUpType.BOMB:
         player.maxBombs++;
+        console.log(`玩家 ${player.id} 獲得炸彈道具，最大炸彈數增加到: ${player.maxBombs}`);
         break;
       case PowerUpType.SPEED:
         player.speed += 0.5;
+        console.log(`玩家 ${player.id} 獲得速度道具，移動速度增加到: ${player.speed}`);
         break;
       case PowerUpType.KICK:
         player.canKick = true;
+        console.log(`玩家 ${player.id} 獲得踢炸彈道具，可以踢炸彈`);
         break;
       case PowerUpType.PIERCE:
         player.canPierce = true;
+        console.log(`玩家 ${player.id} 獲得穿透道具，炸彈可以穿透軟牆`);
         break;
       case PowerUpType.REMOTE:
         player.canRemote = true;
+        console.log(`玩家 ${player.id} 獲得遙控道具，可以遙控引爆炸彈`);
         break;
       case PowerUpType.SHIELD:
         player.hasShield = true;
         player.shieldEndTime = Date.now() + 10000; // 10秒
+        console.log(`玩家 ${player.id} 獲得防護罩道具，10秒內無敵`);
         break;
     }
   }

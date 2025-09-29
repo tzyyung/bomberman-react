@@ -38,6 +38,8 @@ export class BombSystem {
       remote: player.canRemote,
     };
     
+    console.log(`玩家 ${player.id} 放置炸彈，威力: ${bomb.power}`);
+    
     bombs.push(bomb);
     player.bombCount++;
     player.lastBombTime = Date.now();
@@ -104,6 +106,8 @@ export class BombSystem {
   private getExplosionPositions(bomb: Bomb, map: MapTile[][]): Array<{x: number, y: number}> {
     const positions = [{ x: bomb.gridX, y: bomb.gridY }];
     
+    console.log(`炸彈爆炸，威力: ${bomb.power}，位置: (${bomb.gridX}, ${bomb.gridY})`);
+    
     // 四個方向的爆炸
     const directions = [
       { dx: 0, dy: -1 }, // 上
@@ -123,11 +127,13 @@ export class BombSystem {
         if (tile.type === 1) break; // 硬牆停止爆炸
         
         positions.push({ x, y });
+        console.log(`爆炸位置: (${x}, ${y})`);
         
         if (tile.type === 2) break; // 軟牆停止爆炸
       }
     });
     
+    console.log(`總共 ${positions.length} 個爆炸位置`);
     return positions;
   }
 
