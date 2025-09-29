@@ -24,7 +24,13 @@
     "eject": "react-scripts eject",
     "serve": "npx serve -s build",
     "deploy": "./deploy.sh",
-    "dev": "npm start"
+    "dev": "npm start",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "type-check": "tsc --noEmit",
+    "test:coverage": "npm test -- --coverage --watchAll=false",
+    "test:ci": "npm test -- --coverage --watchAll=false --ci",
+    "preview": "npm run build && npm run serve"
   },
   "eslintConfig": {
     "extends": [

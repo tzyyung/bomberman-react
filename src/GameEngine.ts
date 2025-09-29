@@ -100,7 +100,7 @@ export class GameEngine {
     }
   }
 
-  private handleKeyUp(event: KeyboardEvent): void {
+  private handleKeyUp(_event: KeyboardEvent): void {
     // 處理按鍵釋放事件
   }
 
@@ -349,7 +349,7 @@ export class GameEngine {
     });
   }
 
-  private isColliding(obj1: any, obj2: any): boolean {
+  private isColliding(obj1: { pixelX: number; pixelY: number }, obj2: { pixelX: number; pixelY: number }): boolean {
     const distance = Math.sqrt(
       Math.pow(obj1.pixelX - obj2.pixelX, 2) + 
       Math.pow(obj1.pixelY - obj2.pixelY, 2)

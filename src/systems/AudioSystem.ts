@@ -86,9 +86,10 @@ export class AudioSystem {
     }
     
     // 使用 duration 變量來計算緩衝區長度
-    // const bufferLength = this.audioContext!.sampleRate * duration;
+    const bufferLength = this.audioContext!.sampleRate * duration;
+    const actualBufferLength = Math.min(bufferLength, data.length);
 
-    for (let i = 0; i < data.length; i++) {
+    for (let i = 0; i < actualBufferLength; i++) {
       const t = i / this.audioContext.sampleRate;
       const envelope = Math.exp(-t * 3); // 指數衰減
       data[i] = Math.sin(2 * Math.PI * frequency * t) * envelope * 0.3;
