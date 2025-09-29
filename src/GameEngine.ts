@@ -444,13 +444,14 @@ export class GameEngine {
   }
 
   private updatePlayerBombsKickAbility(player: Player): void {
-    console.log(`更新玩家 ${player.id} 的炸彈踢動能力`);
+    console.log(`更新玩家 ${player.id} 的炸彈踢動能力，踢動距離: ${player.kickCount}`);
     
-    // 更新玩家已放置的炸彈的 canKick 屬性
+    // 更新玩家已放置的炸彈的 canKick 屬性和踢動距離
     this.gameState.bombs.forEach(bomb => {
       if (bomb.ownerId === player.id && !bomb.exploded) {
         bomb.canKick = player.canKick;
-        console.log(`更新炸彈 ${bomb.id} 的踢動能力: ${bomb.canKick}`);
+        bomb.maxKickDistance = player.kickCount || 1;
+        console.log(`更新炸彈 ${bomb.id} 的踢動能力: ${bomb.canKick}，最大距離: ${bomb.maxKickDistance}`);
       }
     });
   }

@@ -29,6 +29,7 @@ export interface Player {
   maxBombs: number;
   bombPower: number;
   canKick: boolean;
+  kickCount: number; // 踢炸彈道具數量
   canPierce: boolean;
   canRemote: boolean;
   hasShield: boolean;
@@ -57,6 +58,7 @@ export interface Bomb {
   kickDirection: Direction | null;
   kickSpeed: number;
   kickDistance: number;
+  maxKickDistance?: number; // 最大踢動距離
   remote: boolean;
 }
 

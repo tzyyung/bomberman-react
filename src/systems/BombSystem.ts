@@ -35,6 +35,7 @@ export class BombSystem {
       kickDirection: null,
       kickSpeed: 2,
       kickDistance: 0,
+      maxKickDistance: player.kickCount || 1,
       remote: player.canRemote,
     };
     
@@ -166,6 +167,15 @@ export class BombSystem {
   private updateKickedBomb(bomb: Bomb, map: MapTile[][]): void {
     if (bomb.kickDirection === null) return;
     
+    // 檢查是否達到最大踢動距離
+    const maxDistance = bomb.maxKickDistance || 1;
+    if (bomb.kickDistance >= maxDistance) {
+      console.log(`炸彈踢動達到最大距離 ${maxDistance}，停止踢動`);
+      bomb.kicked = false;
+      bomb.kickDirection = null;
+      return;
+    }
+    
     let newX = bomb.gridX;
     let newY = bomb.gridY;
     
@@ -184,7 +194,7 @@ export class BombSystem {
         break;
     }
     
-    console.log(`炸彈踢動：從 (${bomb.gridX}, ${bomb.gridY}) 到 (${newX}, ${newY})`);
+    console.log(`炸彈踢動：從 (${bomb.gridX}, ${bomb.gridY}) 到 (${newX}, ${newY})，距離: ${bomb.kickDistance + 1}/${maxDistance}`);
     
     // 檢查是否可以移動
     if (this.canMoveBombTo(newX, newY, map)) {
@@ -201,7 +211,7 @@ export class BombSystem {
       // 更新新位置的地圖格子類型
       map[newY][newX].type = 3; // BOMB
       
-      console.log(`炸彈踢動成功，距離: ${bomb.kickDistance}`);
+      console.log(`炸彈踢動成功，距離: ${bomb.kickDistance}/${maxDistance}`);
     } else {
       console.log(`炸彈踢動被阻擋，停止踢動`);
       bomb.kicked = false;
@@ -216,6 +226,39 @@ export class BombSystem {
     return tile.type === 0; // EMPTY
   }
 
+  private findBombNearPlayer(player: Player, bombs: Bomb[]): Bomb | null {
+    // 檢查玩家當前位置是否有炸彈
+    let bomb = bombs.find(b => 
+      b.gridX === player.gridX && b.gridY === player.gridY && !b.exploded
+    );
+    
+    if (bomb) {
+      console.log(`玩家 ${player.id} 在炸彈位置 (${bomb.gridX}, ${bomb.gridY})`);
+      return bomb;
+    }
+    
+    // 檢查玩家旁邊的炸彈（相鄰格子）
+    const adjacentPositions = [
+      { x: player.gridX - 1, y: player.gridY }, // 左
+      { x: player.gridX + 1, y: player.gridY }, // 右
+      { x: player.gridX, y: player.gridY - 1 }, // 上
+      { x: player.gridX, y: player.gridY + 1 }  // 下
+    ];
+    
+    for (const pos of adjacentPositions) {
+      bomb = bombs.find(b => 
+        b.gridX === pos.x && b.gridY === pos.y && !b.exploded
+      );
+      
+      if (bomb) {
+        console.log(`玩家 ${player.id} 旁邊有炸彈，位置: (${bomb.gridX}, ${bomb.gridY})`);
+        return bomb;
+      }
+    }
+    
+    return null;
+  }
+
   public kickBomb(player: Player, bombs: Bomb[], map: MapTile[][]): void {
     if (!player.canKick) {
       console.log(`玩家 ${player.id} 沒有踢炸彈能力`);
@@ -226,20 +269,18 @@ export class BombSystem {
       return;
     }
     
-    const bomb = bombs.find(b => 
-      b.gridX === player.gridX && b.gridY === player.gridY && !b.exploded
-    );
+    // 尋找玩家旁邊的炸彈（相鄰格子）
+    const bomb = this.findBombNearPlayer(player, bombs);
     
-    if (bomb && bomb.canKick) {
-      console.log(`玩家 ${player.id} 踢動炸彈，方向: ${player.direction}`);
+    if (bomb) {
+      console.log(`玩家 ${player.id} 踢動炸彈，方向: ${player.direction}，炸彈位置: (${bomb.gridX}, ${bomb.gridY})`);
       bomb.kicked = true;
       bomb.kickDirection = player.direction;
       bomb.kickDistance = 0;
+      bomb.maxKickDistance = player.kickCount || 1; // 根據踢炸彈道具數量設置最大踢動距離
       player.lastKickTime = Date.now();
-    } else if (bomb && !bomb.canKick) {
-      console.log(`玩家 ${player.id} 嘗試踢動不可踢的炸彈`);
     } else {
-      console.log(`玩家 ${player.id} 位置沒有炸彈可踢`);
+      console.log(`玩家 ${player.id} 旁邊沒有炸彈可踢`);
     }
   }
 

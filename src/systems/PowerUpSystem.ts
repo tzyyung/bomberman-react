@@ -54,7 +54,8 @@ export class PowerUpSystem {
         break;
       case PowerUpType.KICK:
         player.canKick = true;
-        console.log(`玩家 ${player.id} 獲得踢炸彈道具，可以踢炸彈`);
+        player.kickCount = (player.kickCount || 0) + 1;
+        console.log(`玩家 ${player.id} 獲得踢炸彈道具，可以踢炸彈，踢動距離: ${player.kickCount}`);
         break;
       case PowerUpType.PIERCE:
         player.canPierce = true;

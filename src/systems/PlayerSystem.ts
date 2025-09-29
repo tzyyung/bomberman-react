@@ -20,6 +20,7 @@ export class PlayerSystem {
       maxBombs: 1,
       bombPower: 1,
       canKick: false,
+      kickCount: 0,
       canPierce: false,
       canRemote: false,
       hasShield: false,
