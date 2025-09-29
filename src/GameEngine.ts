@@ -273,7 +273,10 @@ export class GameEngine {
     this.systems.player.updatePlayers(this.gameState.players, this.gameState.map, deltaTime);
     
     // 更新炸彈
-    this.systems.bomb.updateBombs(this.gameState.bombs, this.gameState.map, deltaTime);
+    this.systems.bomb.updateBombs(this.gameState.bombs, this.gameState.map, this.gameState.players, deltaTime);
+    
+    // 清理已爆炸的炸彈
+    this.gameState.bombs = this.gameState.bombs.filter(bomb => !bomb.exploded);
     
     // 更新爆炸
     this.updateExplosions(deltaTime);

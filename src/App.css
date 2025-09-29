@@ -6,22 +6,30 @@
   overflow: hidden; /* 防止頁面滾動 */
   color: white;
   font-family: 'Arial', sans-serif;
+  display: flex;
+  flex-direction: column;
 }
 
 .App-header {
-  padding: 20px;
+  padding: 10px 20px;
+  flex-shrink: 0; /* 防止標題區域被壓縮 */
 }
 
 .App-header h1 {
-  margin-bottom: 20px;
-  font-size: 2.5rem;
+  margin: 0 0 10px 0;
+  font-size: 1.8rem;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .game-container {
   position: relative;
   display: inline-block;
-  margin: 20px 0;
+  margin: 10px 0;
+  flex: 1; /* 讓遊戲容器佔據剩餘空間 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .game-container canvas {
@@ -99,9 +107,11 @@
   max-width: 800px;
   margin: 0 auto;
   background: rgba(0, 0, 0, 0.3);
-  padding: 20px;
+  padding: 10px 20px;
   border-radius: 8px;
-  margin-top: 20px;
+  margin-top: 10px;
+  flex-shrink: 0; /* 防止控制說明被壓縮 */
+  font-size: 0.9rem;
 }
 
 .controls-info h3 {

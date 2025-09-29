@@ -43,13 +43,13 @@ export class BombSystem {
     player.lastBombTime = Date.now();
   }
 
-  public updateBombs(bombs: Bomb[], map: MapTile[][], deltaTime: number): void {
+  public updateBombs(bombs: Bomb[], map: MapTile[][], players: Player[], deltaTime: number): void {
     bombs.forEach(bomb => {
       if (bomb.exploded) return;
       
       // 檢查是否應該爆炸
       if (Date.now() - bomb.placeTime >= BOMB_TIMER || bomb.chainExplode) {
-        this.explodeBomb(bomb, bombs, map);
+        this.explodeBomb(bomb, bombs, map, players);
       }
       
       // 更新踢炸彈移動
@@ -59,11 +59,14 @@ export class BombSystem {
     });
   }
 
-  private explodeBomb(bomb: Bomb, bombs: Bomb[], map: MapTile[][]): void {
+  private explodeBomb(bomb: Bomb, bombs: Bomb[], map: MapTile[][], players: Player[]): void {
     bomb.exploded = true;
     
     // 減少玩家炸彈計數
-    // 這裡需要從外部傳入玩家數組，暫時跳過
+    const owner = players.find(p => p.id === bomb.ownerId);
+    if (owner) {
+      owner.bombCount = Math.max(0, owner.bombCount - 1);
+    }
     
     // 創建爆炸效果
     this.createExplosion(bomb, map);
