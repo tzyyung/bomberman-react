@@ -4,7 +4,7 @@
 
 ## 🎮 遊戲預覽
 
-![遊戲截圖](https://via.placeholder.com/800x600/000000/FFFFFF?text=Bomberman+React+Game)
+![遊戲截圖](../game_preview.png)
 
 ## ✨ 功能特色
 
