@@ -95,6 +95,15 @@ export class GameEngine {
     // 阻止瀏覽器默認行為
     event.preventDefault();
     
+    // 處理重新開始按鍵
+    if (event.key === 'r' || event.key === 'R') {
+      if (this.gameState.state === 'over' || this.gameState.state === 'paused') {
+        console.log('鍵盤重新開始被觸發');
+        this.restartGame();
+        return;
+      }
+    }
+    
     if (this.gameState.state !== 'playing') return;
 
     const inputEvent = this.parseKeyEvent(event);
@@ -286,7 +295,6 @@ export class GameEngine {
     
     this.animationId = requestAnimationFrame(() => this.gameLoop());
   }
-
 
   private update(deltaTime: number): void {
     // 處理輸入

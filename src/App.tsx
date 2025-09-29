@@ -83,6 +83,14 @@ const App: React.FC = () => {
         handleResumeGame();
       }
     }
+    
+    // 添加 R 鍵重新開始功能
+    if (event.key === 'r' || event.key === 'R') {
+      if (gameState?.state === 'over' || gameState?.state === 'paused') {
+        console.log('R 鍵重新開始被觸發');
+        handleRestartGame();
+      }
+    }
   };
 
   return (
@@ -118,7 +126,15 @@ const App: React.FC = () => {
                 <button onClick={handleResumeGame} className="menu-button">
                   繼續遊戲
                 </button>
-                <button onClick={handleRestartGame} className="menu-button">
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('重新開始按鈕被點擊 (暫停菜單)');
+                    handleRestartGame();
+                  }} 
+                  className="menu-button"
+                >
                   重新開始
                 </button>
                 <button onClick={handleShowMenu} className="menu-button">
@@ -137,7 +153,15 @@ const App: React.FC = () => {
                 ) : (
                   <p>平局！</p>
                 )}
-                <button onClick={handleRestartGame} className="menu-button">
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('再玩一次按鈕被點擊 (遊戲結束菜單)');
+                    handleRestartGame();
+                  }} 
+                  className="menu-button"
+                >
                   再玩一次
                 </button>
                 <button onClick={handleShowMenu} className="menu-button">
@@ -167,6 +191,7 @@ const App: React.FC = () => {
           <div className="control-section">
             <h4>通用</h4>
             <p>暫停/繼續: ESC 鍵</p>
+            <p>重新開始: R 鍵</p>
           </div>
         </div>
       </header>
