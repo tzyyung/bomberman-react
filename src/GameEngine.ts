@@ -3,7 +3,7 @@
  * 負責管理遊戲狀態、更新和渲染
  */
 
-import { GameState, InputEvent, GameConfig, Player } from './types';
+import { GameState, InputEvent, GameConfig } from './types';
 import { Direction, MAP_WIDTH, MAP_HEIGHT, TILE_SIZE, PLAYER_SPEED, BOMB_TIMER, EXPLOSION_DURATION } from './constants';
 import { MapSystem } from './systems/MapSystem';
 import { PlayerSystem } from './systems/PlayerSystem';
@@ -258,12 +258,15 @@ export class GameEngine {
     const deltaTime = currentTime - this.lastTime;
     this.lastTime = currentTime;
 
-    if (!this.gameState.paused) {
-      this.update(deltaTime);
+    // 限制更新頻率到 60 FPS，減少不必要的計算
+    if (deltaTime >= 16.67) {
+      if (!this.gameState.paused) {
+        this.update(deltaTime);
+      }
+      
+      this.render();
+      this.monitorPerformance();
     }
-    
-    this.render();
-    this.monitorPerformance();
     
     this.animationId = requestAnimationFrame(() => this.gameLoop());
   }
@@ -337,10 +340,11 @@ export class GameEngine {
 
 
   private processInput(): void {
-    while (this.inputQueue.length > 0) {
-      const input = this.inputQueue.shift()!;
+    // 立即處理所有輸入，減少延遲
+    const inputs = this.inputQueue.splice(0); // 一次性取出所有輸入
+    inputs.forEach(input => {
       this.handleInput(input);
-    }
+    });
   }
 
 
@@ -429,9 +433,8 @@ export class GameEngine {
   }
 
   private render(): void {
-    // 清空畫布
-    this.ctx.fillStyle = '#000000';
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    // 優化渲染：使用 clearRect 而不是 fillRect
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     
     // 渲染地圖
     this.systems.map.render(this.ctx, this.gameState.map);

@@ -82,7 +82,6 @@ const App: React.FC = () => {
   return (
     <div className="App" onKeyDown={handleKeyDown} tabIndex={0}>
       <header className="App-header">
-        <h1>炸彈超人 React 版</h1>
         <div className="game-container">
           <canvas
             ref={canvasRef}
