@@ -226,6 +226,7 @@ const App: React.FC = () => {
             ref={canvasRef}
             width={832}
             height={704}
+            className={`game-canvas ${gameState?.state === 'paused' ? 'paused' : ''}`}
             style={{ border: '2px solid #333', backgroundColor: '#000' }}
           />
 

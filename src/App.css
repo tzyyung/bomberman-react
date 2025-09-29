@@ -207,6 +207,15 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
+/* 遊戲 Canvas 樣式 */
+.game-canvas {
+  pointer-events: auto; /* 正常情況下可以接收事件 */
+}
+
+.game-canvas.paused {
+  pointer-events: none; /* 暫停時不接收滑鼠事件，讓選單可以點擊 */
+}
+
 .controls-info {
   max-width: 800px;
   margin: 0 auto;
