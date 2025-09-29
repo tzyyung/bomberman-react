@@ -1,46 +1,158 @@
-# Getting Started with Create React App
+# 炸彈超人 React 版
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+這是一個使用 React + TypeScript 重新製作的炸彈超人遊戲，基於原有的 Python 版本改寫而成。
 
-## Available Scripts
+## 功能特色
 
-In the project directory, you can run:
+- 🎮 雙人對戰模式
+- 💣 炸彈放置和爆炸系統
+- 🎁 多種道具收集
+- 🛡️ 特殊能力系統
+- 🎵 音效和背景音樂
+- 📱 響應式設計
 
-### `npm start`
+## 遊戲控制
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### 玩家 1 (藍色)
+- **移動**: W A S D 鍵
+- **放置炸彈**: 空白鍵
+- **踢炸彈**: B 鍵
+- **遙控引爆**: V 鍵
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+### 玩家 2 (紅色)
+- **移動**: 方向鍵
+- **放置炸彈**: Enter 鍵
+- **踢炸彈**: 右 Shift 鍵
+- **遙控引爆**: / 鍵
 
-### `npm test`
+### 通用控制
+- **暫停/繼續**: ESC 鍵
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 道具系統
 
-### `npm run build`
+- 🔥 **火焰道具**: 增加炸彈威力
+- 💣 **炸彈道具**: 增加可放置炸彈數量
+- ⚡ **速度道具**: 增加移動速度
+- 👟 **踢炸彈道具**: 可以踢動炸彈
+- 💥 **穿透道具**: 炸彈可以穿透軟牆
+- 📱 **遙控道具**: 可以遙控引爆炸彈
+- 🛡️ **防護罩道具**: 10秒內無敵狀態
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 安裝和運行
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### 前置要求
+- Node.js 14.0 或更高版本
+- npm 或 yarn
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### 安裝依賴
+```bash
+npm install
+```
 
-### `npm run eject`
+### 開發模式運行
+```bash
+npm start
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+遊戲將在 http://localhost:3000 上運行。
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### 構建生產版本
+```bash
+npm run build
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+## 項目結構
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+```
+src/
+├── components/          # React 組件
+├── systems/            # 遊戲系統
+│   ├── MapSystem.ts    # 地圖系統
+│   ├── PlayerSystem.ts # 玩家系統
+│   ├── BombSystem.ts   # 炸彈系統
+│   ├── PowerUpSystem.ts # 道具系統
+│   ├── AudioSystem.ts  # 音頻系統
+│   └── UISystem.ts     # UI系統
+├── types.ts            # TypeScript 類型定義
+├── constants.ts        # 遊戲常數
+├── GameEngine.ts       # 遊戲引擎核心
+├── App.tsx            # 主應用組件
+└── App.css            # 樣式文件
+```
 
-## Learn More
+## 技術特點
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### 架構設計
+- **模組化設計**: 將遊戲功能分解為獨立的系統
+- **TypeScript**: 提供類型安全和更好的開發體驗
+- **Canvas 渲染**: 使用 HTML5 Canvas 進行遊戲渲染
+- **事件驅動**: 基於鍵盤事件的輸入處理
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### 遊戲系統
+- **地圖系統**: 隨機生成地圖，管理碰撞檢測
+- **玩家系統**: 處理玩家移動、屬性和能力
+- **炸彈系統**: 管理炸彈放置、爆炸和連鎖反應
+- **道具系統**: 處理道具生成、收集和效果
+- **音頻系統**: 管理音效和背景音樂
+- **UI系統**: 渲染遊戲界面和菜單
+
+### 性能優化
+- **60 FPS**: 流暢的遊戲體驗
+- **事件節流**: 防止輸入事件過於頻繁
+- **內存管理**: 及時清理不需要的對象
+- **響應式設計**: 適配不同屏幕尺寸
+
+## 開發說明
+
+### 添加新功能
+1. 在對應的系統文件中添加功能
+2. 更新類型定義（如需要）
+3. 在 GameEngine 中集成新功能
+4. 更新 UI 系統以顯示新功能
+
+### 自定義配置
+可以在 `constants.ts` 文件中修改遊戲參數：
+- 地圖大小
+- 玩家速度
+- 炸彈威力
+- 道具機率等
+
+### 音頻自定義
+在 `AudioSystem.ts` 中可以：
+- 添加新的音效
+- 修改音量設置
+- 添加背景音樂
+
+## 與 Python 版本的對比
+
+| 功能 | Python 版本 | React 版本 |
+|------|-------------|------------|
+| 平台 | 桌面應用 | 網頁應用 |
+| 技術棧 | Pygame + Python | React + TypeScript + Canvas |
+| 部署 | 需要安裝 Python | 只需瀏覽器 |
+| 多人遊戲 | 本地雙人 | 本地雙人 |
+| 音頻 | Pygame 音頻 | Web Audio API |
+| 渲染 | Pygame 表面 | HTML5 Canvas |
+
+## 已知問題
+
+- 音頻在某些瀏覽器中可能需要用戶交互才能播放
+- 移動設備上的觸控支持尚未實現
+- 網絡多人遊戲功能尚未開發
+
+## 未來計劃
+
+- [ ] 添加觸控支持
+- [ ] 實現網絡多人遊戲
+- [ ] 添加更多地圖主題
+- [ ] 實現遊戲錄像功能
+- [ ] 添加更多音效和音樂
+- [ ] 實現成就系統
+
+## 貢獻
+
+歡迎提交 Issue 和 Pull Request 來改進這個項目！
+
+## 許可證
+
+MIT License
