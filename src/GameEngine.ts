@@ -3,7 +3,7 @@
  * 負責管理遊戲狀態、更新和渲染
  */
 
-import { GameState, InputEvent, GameConfig } from './types';
+import { GameState, InputEvent, GameConfig, Player } from './types';
 import { Direction, MAP_WIDTH, MAP_HEIGHT, TILE_SIZE, PLAYER_SPEED, BOMB_TIMER, EXPLOSION_DURATION } from './constants';
 import { MapSystem } from './systems/MapSystem';
 import { PlayerSystem } from './systems/PlayerSystem';
@@ -425,6 +425,11 @@ export class GameEngine {
         if (!powerUp.collected && this.isColliding(player, powerUp)) {
           this.systems.powerUp.collectPowerUp(player, powerUp);
           this.systems.audio.playSound('powerup_collect');
+          
+          // 如果獲得踢炸彈道具，更新玩家已放置的炸彈
+          if (powerUp.type === 3) { // PowerUpType.KICK
+            this.updatePlayerBombsKickAbility(player);
+          }
         }
       });
     });
@@ -436,6 +441,18 @@ export class GameEngine {
       Math.pow(obj1.pixelY - obj2.pixelY, 2)
     );
     return distance < TILE_SIZE / 2;
+  }
+
+  private updatePlayerBombsKickAbility(player: Player): void {
+    console.log(`更新玩家 ${player.id} 的炸彈踢動能力`);
+    
+    // 更新玩家已放置的炸彈的 canKick 屬性
+    this.gameState.bombs.forEach(bomb => {
+      if (bomb.ownerId === player.id && !bomb.exploded) {
+        bomb.canKick = player.canKick;
+        console.log(`更新炸彈 ${bomb.id} 的踢動能力: ${bomb.canKick}`);
+      }
+    });
   }
 
   private spawnRandomPowerUps(): void {

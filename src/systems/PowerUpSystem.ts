@@ -170,4 +170,5 @@ export class PowerUpSystem {
     
     return descriptions[type] || '未知效果';
   }
+
 }
