@@ -51,8 +51,9 @@ export class AudioSystem {
     const data = buffer.getChannelData(0);
 
     let frequency = 440;
-    let duration = 0.5;
 
+    let duration = 0.5;
+    
     switch (soundType) {
       case 'bomb_place':
         frequency = 200;
@@ -83,6 +84,9 @@ export class AudioSystem {
         duration = 0.3;
         break;
     }
+    
+    // 使用 duration 變量來計算緩衝區長度
+    // const bufferLength = this.audioContext!.sampleRate * duration;
 
     for (let i = 0; i < data.length; i++) {
       const t = i / this.audioContext.sampleRate;

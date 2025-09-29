@@ -3,7 +3,7 @@
  * 負責地圖生成、渲染和碰撞檢測
  */
 
-import { MapTile, Player, Bomb, PowerUp } from '../types';
+import { MapTile } from '../types';
 import { TileType, MAP_WIDTH, MAP_HEIGHT, TILE_SIZE, BROWN, LIGHT_BROWN, BLACK } from '../constants';
 
 export class MapSystem {

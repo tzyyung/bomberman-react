@@ -4,7 +4,7 @@
  */
 
 import { Player, MapTile } from '../types';
-import { Direction, TILE_SIZE, PLAYER_SPEED, BLUE, RED } from '../constants';
+import { Direction, TILE_SIZE, PLAYER_SPEED } from '../constants';
 
 export class PlayerSystem {
   public createPlayer(x: number, y: number, id: number, color: string): Player {

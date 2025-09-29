@@ -4,7 +4,7 @@
  */
 
 import { GameState, Player } from '../types';
-import { WHITE, BLACK, GRAY, LIGHT_GREEN, BLUE, RED } from '../constants';
+import { WHITE, GRAY, LIGHT_GREEN, BLUE, RED } from '../constants';
 
 export class UISystem {
   public render(ctx: CanvasRenderingContext2D, gameState: GameState): void {

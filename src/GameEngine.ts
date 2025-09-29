@@ -3,8 +3,8 @@
  * 負責管理遊戲狀態、更新和渲染
  */
 
-import { GameState, Player, Bomb, PowerUp, Explosion, MapTile, InputEvent, GameConfig } from './types';
-import { GameState as GameStateEnum, Direction, PowerUpType, TileType, MAP_WIDTH, MAP_HEIGHT, TILE_SIZE, PLAYER_SPEED, BOMB_TIMER, EXPLOSION_DURATION } from './constants';
+import { GameState, InputEvent, GameConfig } from './types';
+import { Direction, MAP_WIDTH, MAP_HEIGHT, TILE_SIZE, PLAYER_SPEED, BOMB_TIMER, EXPLOSION_DURATION } from './constants';
 import { MapSystem } from './systems/MapSystem';
 import { PlayerSystem } from './systems/PlayerSystem';
 import { BombSystem } from './systems/BombSystem';
@@ -364,6 +364,15 @@ export class GameEngine {
       this.gameState.state = 'over';
       this.gameState.winner = alivePlayers.length === 1 ? alivePlayers[0].id : null;
       this.systems.audio.playSound('game_over');
+      
+      // 更新分數
+      if (this.gameState.winner) {
+        if (this.gameState.winner === 1) {
+          this.gameState.score.player1++;
+        } else {
+          this.gameState.score.player2++;
+        }
+      }
     }
   }
 

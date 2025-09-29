@@ -3,8 +3,8 @@
  * 負責炸彈管理、爆炸邏輯和渲染
  */
 
-import { Bomb, Player, MapTile, Explosion } from '../types';
-import { TILE_SIZE, BOMB_TIMER, EXPLOSION_DURATION, Direction } from '../constants';
+import { Bomb, Player, MapTile } from '../types';
+import { TILE_SIZE, BOMB_TIMER, Direction } from '../constants';
 
 export class BombSystem {
   private bombIdCounter = 0;
@@ -79,6 +79,14 @@ export class BombSystem {
       // 摧毀軟牆
       if (map[pos.y][pos.x].type === 2) { // SOFT_WALL
         map[pos.y][pos.x].type = 0; // EMPTY
+        
+        // 30% 機率生成道具
+        if (Math.random() < 0.3) {
+          map[pos.y][pos.x].hasPowerUp = true;
+          // 隨機選擇道具類型
+          const powerUpTypes = [0, 1, 2, 3, 4, 5, 6]; // 所有道具類型
+          map[pos.y][pos.x].powerUpType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
+        }
       }
     });
   }
@@ -132,7 +140,6 @@ export class BombSystem {
   private updateKickedBomb(bomb: Bomb, map: MapTile[][]): void {
     if (bomb.kickDirection === null) return;
     
-    const moveDistance = bomb.kickSpeed;
     let newX = bomb.gridX;
     let newY = bomb.gridY;
     
