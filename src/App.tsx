@@ -67,6 +67,9 @@ const App: React.FC = () => {
   };
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
+    // 阻止瀏覽器默認行為，防止頁面滾動
+    event.preventDefault();
+    
     if (event.key === 'Escape') {
       if (gameState?.state === 'playing') {
         handlePauseGame();

@@ -2,6 +2,8 @@
   text-align: center;
   background: linear-gradient(135deg, #1e3c72, #2a5298);
   min-height: 100vh;
+  height: 100vh;
+  overflow: hidden; /* 防止頁面滾動 */
   color: white;
   font-family: 'Arial', sans-serif;
 }

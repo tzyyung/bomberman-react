@@ -92,6 +92,9 @@ export class GameEngine {
   }
 
   private handleKeyDown(event: KeyboardEvent): void {
+    // 阻止瀏覽器默認行為
+    event.preventDefault();
+    
     if (this.gameState.state !== 'playing') return;
 
     const inputEvent = this.parseKeyEvent(event);
@@ -100,7 +103,10 @@ export class GameEngine {
     }
   }
 
-  private handleKeyUp(_event: KeyboardEvent): void {
+  private handleKeyUp(event: KeyboardEvent): void {
+    // 阻止瀏覽器默認行為
+    event.preventDefault();
+    
     // 處理按鍵釋放事件
   }
 
