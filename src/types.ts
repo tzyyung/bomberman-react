@@ -1,44 +1,68 @@
 /**
- * 遊戲類型定義
- * 定義遊戲中使用的所有數據結構和接口
+ * 遊戲類型定義 (Types)
+ * 
+ * 功能說明：
+ * - 定義遊戲中使用的所有數據結構和接口
+ * - 提供 TypeScript 類型安全支持
+ * - 統一管理遊戲實體的屬性定義
+ * - 確保代碼的一致性和可維護性
+ * - 為遊戲引擎和各個系統提供類型約束
+ * 
+ * 主要類型：
+ * - 基本類型：位置、網格位置等基礎數據結構
+ * - 遊戲實體：玩家、炸彈、道具、地圖格子等
+ * - 遊戲狀態：遊戲狀態、配置、輸入事件等
+ * - 枚舉類型：方向、道具類型、瓦片類型等
  */
 
-import { Direction, PowerUpType, TileType } from './constants';
+import { Direction, PowerUpType, TileType } from './constants'; // 導入常數定義
 
 // ==================== 基本位置類型 ====================
+/**
+ * 像素位置接口
+ * 用於表示屏幕上的像素坐標
+ */
 export interface Position {
-  x: number;
-  y: number;
+  x: number; // X 坐標（像素）
+  y: number; // Y 坐標（像素）
 }
 
+/**
+ * 網格位置接口
+ * 用於表示地圖網格中的坐標
+ */
 export interface GridPosition {
-  gridX: number;
-  gridY: number;
+  gridX: number; // 網格 X 坐標
+  gridY: number; // 網格 Y 坐標
 }
 
 // ==================== 玩家類型 ====================
+/**
+ * 玩家接口
+ * 定義玩家的所有屬性和狀態
+ */
 export interface Player {
-  id: number;
-  alive: boolean;
-  gridX: number;
-  gridY: number;
-  pixelX: number;
-  pixelY: number;
-  direction: Direction;
-  speed: number;
-  maxBombs: number;
-  bombPower: number;
-  canKick: boolean;
-  kickCount: number; // 踢炸彈道具數量
-  canPierce: boolean;
-  canRemote: boolean;
-  hasShield: boolean;
-  shieldEndTime: number;
-  bombCount: number;
-  lastBombTime: number;
-  lastKickTime: number;
-  lastRemoteTime: number;
-  color: string;
+  id: number;                    // 玩家唯一標識符
+  alive: boolean;                // 玩家是否存活
+  gridX: number;                 // 網格 X 坐標
+  gridY: number;                 // 網格 Y 坐標
+  pixelX: number;                // 像素 X 坐標
+  pixelY: number;                // 像素 Y 坐標
+  direction: Direction;          // 玩家面向方向
+  speed: number;                 // 移動速度
+  maxBombs: number;              // 最大炸彈數量
+  bombPower: number;             // 炸彈威力（爆炸範圍）
+  canKick: boolean;              // 是否可以踢炸彈
+  kickCount: number;             // 踢炸彈道具數量（影響踢動距離）
+  canPierce: boolean;            // 是否具有穿透能力
+  canRemote: boolean;            // 是否可以遙控引爆
+  hasShield: boolean;            // 是否有防護罩
+  shieldEndTime: number;         // 防護罩結束時間
+  bombCount: number;             // 當前炸彈數量
+  lastBombTime: number;          // 最後放置炸彈時間
+  lastKickTime: number;          // 最後踢炸彈時間
+  lastRemoteTime: number;        // 最後遙控引爆時間
+  color: string;                 // 玩家顏色
 }
 
 // ==================== 炸彈類型 ====================
