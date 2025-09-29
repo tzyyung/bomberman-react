@@ -50,9 +50,9 @@ export class PlayerSystem {
     const dy = targetY - player.pixelY;
     const distance = Math.sqrt(dx * dx + dy * dy);
     
-    if (distance > 1) {
-      // 大幅提升移動速度，減少停頓
-      const moveSpeed = player.speed * 0.8; // 大幅提升移動速度
+    if (distance > 0.5) {
+      // 極速移動，幾乎即時到達
+      const moveSpeed = player.speed * 2.0; // 極速移動
       const moveX = (dx / distance) * moveSpeed * deltaTime;
       const moveY = (dy / distance) * moveSpeed * deltaTime;
       
@@ -74,16 +74,6 @@ export class PlayerSystem {
 
   public movePlayer(player: Player, direction: Direction, map: MapTile[][]): void {
     if (!player.alive) return;
-    
-    // 檢查玩家是否已經在移動中（放寬限制）
-    const targetX = player.gridX * TILE_SIZE + TILE_SIZE / 2;
-    const targetY = player.gridY * TILE_SIZE + TILE_SIZE / 2;
-    const dx = targetX - player.pixelX;
-    const dy = targetY - player.pixelY;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    
-    // 如果玩家還在移動中，不允許新的移動（放寬到 8 像素）
-    if (distance > 8) return;
     
     let newX = player.gridX;
     let newY = player.gridY;

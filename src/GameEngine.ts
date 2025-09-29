@@ -79,7 +79,6 @@ export class GameEngine {
     this.setupEventListeners();
   }
 
-
   private setupEventListeners(): void {
     // 鍵盤事件監聽
     document.addEventListener('keydown', this.handleKeyDown.bind(this));
@@ -128,32 +127,8 @@ export class GameEngine {
       return {
         playerId: 1,
         action: 'move',
-        direction,
-        timestamp: Date.now(),
-      };
-    }
-    
-    if (key === 'Space') {
-      return {
-        playerId: 1,
-        action: 'bomb',
-        timestamp: Date.now(),
-      };
-    }
-    
-    if (key === 'KeyB') {
-      return {
-        playerId: 1,
-        action: 'kick',
-        timestamp: Date.now(),
-      };
-    }
-    
-    if (key === 'KeyV') {
-      return {
-        playerId: 1,
-        action: 'remote',
-        timestamp: Date.now(),
+        direction: direction,
+        timestamp: Date.now()
       };
     }
     
@@ -170,8 +145,17 @@ export class GameEngine {
       return {
         playerId: 2,
         action: 'move',
-        direction,
-        timestamp: Date.now(),
+        direction: direction,
+        timestamp: Date.now()
+      };
+    }
+    
+    // 炸彈按鍵
+    if (key === 'Space') {
+      return {
+        playerId: 1,
+        action: 'bomb',
+        timestamp: Date.now()
       };
     }
     
@@ -179,27 +163,56 @@ export class GameEngine {
       return {
         playerId: 2,
         action: 'bomb',
-        timestamp: Date.now(),
+        timestamp: Date.now()
       };
     }
     
-    if (key === 'ShiftRight') {
+    // 踢炸彈按鍵
+    if (key === 'KeyQ') {
+      return {
+        playerId: 1,
+        action: 'kick',
+        timestamp: Date.now()
+      };
+    }
+    
+    if (key === 'KeyP') {
       return {
         playerId: 2,
         action: 'kick',
-        timestamp: Date.now(),
+        timestamp: Date.now()
       };
     }
     
-    if (key === 'Slash') {
+    // 遙控爆炸按鍵
+    if (key === 'KeyE') {
+      return {
+        playerId: 1,
+        action: 'remote',
+        timestamp: Date.now()
+      };
+    }
+    
+    if (key === 'KeyO') {
       return {
         playerId: 2,
         action: 'remote',
-        timestamp: Date.now(),
+        timestamp: Date.now()
       };
     }
     
     return null;
+  }
+
+  private initializeGame(): void {
+    // 生成地圖
+    this.gameState.map = this.systems.map.generateMap();
+    
+    // 創建玩家
+    this.gameState.players = [
+      this.systems.player.createPlayer(1, 1, 1, '#0000FF'), // 玩家1 - 藍色
+      this.systems.player.createPlayer(11, 9, 2, '#FF0000'), // 玩家2 - 紅色
+    ];
   }
 
   public startGame(): void {
@@ -231,26 +244,6 @@ export class GameEngine {
       cancelAnimationFrame(this.animationId);
       this.animationId = null;
     }
-  }
-
-  private initializeGame(): void {
-    // 重置遊戲狀態
-    this.gameState.winner = null;
-    this.gameState.bombs = [];
-    this.gameState.powerUps = [];
-    this.gameState.explosions = [];
-    this.gameState.score = { player1: 0, player2: 0 };
-    this.gameState.time = 0;
-    this.gameState.paused = false;
-
-    // 生成地圖
-    this.gameState.map = this.systems.map.generateMap();
-    
-    // 創建玩家
-    this.gameState.players = [
-      this.systems.player.createPlayer(1, 1, 1, '#0000FF'), // 玩家1 - 藍色
-      this.systems.player.createPlayer(11, 9, 2, '#FF0000'), // 玩家2 - 紅色
-    ];
   }
 
   private gameLoop(): void {
@@ -338,7 +331,6 @@ export class GameEngine {
     this.checkGameEnd();
   }
 
-
   private processInput(): void {
     // 立即處理所有輸入，減少延遲
     const inputs = this.inputQueue.splice(0); // 一次性取出所有輸入
@@ -346,7 +338,6 @@ export class GameEngine {
       this.handleInput(input);
     });
   }
-
 
   private handleInput(input: InputEvent): void {
     const player = this.gameState.players.find(p => p.id === input.playerId);
@@ -480,4 +471,3 @@ export class GameEngine {
     document.removeEventListener('keyup', this.handleKeyUp);
   }
 }
-
