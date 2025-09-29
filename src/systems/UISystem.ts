@@ -1,26 +1,56 @@
 /**
- * UI系統
- * 負責用戶界面渲染
+ * UI系統 (UISystem)
+ * 
+ * 功能說明：
+ * - 管理遊戲的所有用戶界面元素
+ * - 渲染 HUD（抬頭顯示器）信息
+ * - 處理菜單和遊戲狀態顯示
+ * - 提供玩家信息和遊戲統計
+ * - 渲染道具和特殊效果
+ * - 支持多種遊戲狀態的UI切換
+ * 
+ * 主要方法：
+ * - render: 主渲染方法
+ * - renderHUD: 渲染遊戲內UI
+ * - renderPlayerInfo: 渲染玩家信息
+ * - renderMenu: 渲染主菜單
+ * - renderPauseMenu: 渲染暫停菜單
+ * - renderGameOver: 渲染遊戲結束畫面
+ * - renderPowerUps: 渲染道具
  */
 
-import { GameState, Player, PowerUp } from '../types';
-import { WHITE, GRAY, LIGHT_GREEN, BLUE, RED, TILE_SIZE } from '../constants';
+import { GameState, Player, PowerUp } from '../types'; // 導入類型定義
+import { WHITE, GRAY, LIGHT_GREEN, BLUE, RED, TILE_SIZE } from '../constants'; // 導入常數定義
 
 export class UISystem {
+  /**
+   * 主渲染方法
+   * 
+   * 功能說明：
+   * - 根據遊戲狀態渲染不同的UI元素
+   * - 協調各個UI組件的渲染順序
+   * - 處理遊戲內和菜單狀態的切換
+   * - 確保UI元素的正確顯示
+   * 
+   * @param ctx Canvas 2D 渲染上下文
+   * @param gameState 當前遊戲狀態
+   */
   public render(ctx: CanvasRenderingContext2D, gameState: GameState): void {
+    // 渲染 HUD（抬頭顯示器）
     this.renderHUD(ctx, gameState);
     
-    // 渲染道具
+    // 在遊戲進行中渲染道具
     if (gameState.state === 'playing') {
       this.renderPowerUps(ctx, gameState.powerUps);
     }
     
+    // 根據遊戲狀態渲染不同的菜單
     if (gameState.state === 'menu') {
-      this.renderMenu(ctx);
+      this.renderMenu(ctx); // 主菜單
     } else if (gameState.state === 'paused') {
-      this.renderPauseMenu(ctx);
+      this.renderPauseMenu(ctx); // 暫停菜單
     } else if (gameState.state === 'over') {
-      this.renderGameOver(ctx, gameState);
+      this.renderGameOver(ctx, gameState); // 遊戲結束畫面
     }
   }
 
