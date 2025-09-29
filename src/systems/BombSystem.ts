@@ -184,6 +184,8 @@ export class BombSystem {
         break;
     }
     
+    console.log(`炸彈踢動：從 (${bomb.gridX}, ${bomb.gridY}) 到 (${newX}, ${newY})`);
+    
     // 檢查是否可以移動
     if (this.canMoveBombTo(newX, newY, map)) {
       // 恢復原位置的地圖格子類型
@@ -198,7 +200,10 @@ export class BombSystem {
       
       // 更新新位置的地圖格子類型
       map[newY][newX].type = 3; // BOMB
+      
+      console.log(`炸彈踢動成功，距離: ${bomb.kickDistance}`);
     } else {
+      console.log(`炸彈踢動被阻擋，停止踢動`);
       bomb.kicked = false;
       bomb.kickDirection = null;
     }
@@ -212,18 +217,29 @@ export class BombSystem {
   }
 
   public kickBomb(player: Player, bombs: Bomb[], map: MapTile[][]): void {
-    if (!player.canKick) return;
-    if (Date.now() - player.lastKickTime < 300) return;
+    if (!player.canKick) {
+      console.log(`玩家 ${player.id} 沒有踢炸彈能力`);
+      return;
+    }
+    if (Date.now() - player.lastKickTime < 300) {
+      console.log(`玩家 ${player.id} 踢炸彈冷卻中`);
+      return;
+    }
     
     const bomb = bombs.find(b => 
       b.gridX === player.gridX && b.gridY === player.gridY && !b.exploded
     );
     
     if (bomb && bomb.canKick) {
+      console.log(`玩家 ${player.id} 踢動炸彈，方向: ${player.direction}`);
       bomb.kicked = true;
       bomb.kickDirection = player.direction;
       bomb.kickDistance = 0;
       player.lastKickTime = Date.now();
+    } else if (bomb && !bomb.canKick) {
+      console.log(`玩家 ${player.id} 嘗試踢動不可踢的炸彈`);
+    } else {
+      console.log(`玩家 ${player.id} 位置沒有炸彈可踢`);
     }
   }
 
@@ -270,5 +286,35 @@ export class BombSystem {
     ctx.strokeStyle = '#FFFFFF';
     ctx.lineWidth = 2;
     ctx.strokeRect(x, y, size, size);
+    
+    // 如果炸彈被踢動，添加特殊效果
+    if (bomb.kicked) {
+      // 踢動效果：閃爍的黃色邊框
+      const kickTime = Date.now() - bomb.placeTime;
+      const kickFlashRate = 100;
+      if (Math.floor(kickTime / kickFlashRate) % 2 === 0) {
+        ctx.strokeStyle = '#FFFF00';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(x - 2, y - 2, size + 4, size + 4);
+      }
+      
+      // 踢動方向箭頭
+      ctx.fillStyle = '#FFFF00';
+      ctx.font = 'bold 12px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      
+      let arrow = '';
+      switch (bomb.kickDirection) {
+        case Direction.UP: arrow = '↑'; break;
+        case Direction.DOWN: arrow = '↓'; break;
+        case Direction.LEFT: arrow = '←'; break;
+        case Direction.RIGHT: arrow = '→'; break;
+      }
+      
+      if (arrow) {
+        ctx.fillText(arrow, bomb.pixelX, bomb.pixelY - size/2 - 10);
+      }
+    }
   }
 }

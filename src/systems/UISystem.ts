@@ -140,7 +140,7 @@ export class UISystem {
     // 按鈕
     const buttons = [
       { text: '繼續遊戲', action: 'resume' },
-      { text: '重新開始', action: 'restart' },
+      { text: '重新開始(R)', action: 'restart' },
       { text: '主選單', action: 'menu' },
     ];
     
@@ -176,7 +176,7 @@ export class UISystem {
     
     // 按鈕
     const buttons = [
-      { text: '再玩一次', action: 'restart' },
+      { text: '再玩一次(R)', action: 'restart' },
       { text: '主選單', action: 'menu' },
     ];
     

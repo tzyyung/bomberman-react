@@ -178,7 +178,7 @@ export class GameEngine {
     }
     
     // 踢炸彈按鍵
-    if (key === 'KeyQ') {
+    if (key === 'KeyB') {
       return {
         playerId: 1,
         action: 'kick',
@@ -186,7 +186,7 @@ export class GameEngine {
       };
     }
     
-    if (key === 'KeyP') {
+    if (key === 'ShiftRight') {
       return {
         playerId: 2,
         action: 'kick',
@@ -195,7 +195,7 @@ export class GameEngine {
     }
     
     // 遙控爆炸按鍵
-    if (key === 'KeyE') {
+    if (key === 'KeyV') {
       return {
         playerId: 1,
         action: 'remote',
@@ -203,7 +203,7 @@ export class GameEngine {
       };
     }
     
-    if (key === 'KeyO') {
+    if (key === 'Slash') {
       return {
         playerId: 2,
         action: 'remote',
