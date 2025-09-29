@@ -273,7 +273,25 @@ export class GameEngine {
     this.systems.player.updatePlayers(this.gameState.players, this.gameState.map, deltaTime);
     
     // 更新炸彈
-    this.systems.bomb.updateBombs(this.gameState.bombs, this.gameState.map, this.gameState.players, deltaTime);
+    const explosionPositions = this.systems.bomb.updateBombs(this.gameState.bombs, this.gameState.map, this.gameState.players, deltaTime);
+    
+    // 創建爆炸效果
+    explosionPositions.forEach(positions => {
+      positions.forEach(pos => {
+        const explosion = {
+          id: `explosion_${Date.now()}_${Math.random()}`,
+          gridX: pos.x,
+          gridY: pos.y,
+          pixelX: pos.x * TILE_SIZE + TILE_SIZE / 2,
+          pixelY: pos.y * TILE_SIZE + TILE_SIZE / 2,
+          startTime: Date.now(),
+          duration: EXPLOSION_DURATION,
+          finished: false,
+          direction: null as any,
+        };
+        this.gameState.explosions.push(explosion);
+      });
+    });
     
     // 清理已爆炸的炸彈
     this.gameState.bombs = this.gameState.bombs.filter(bomb => !bomb.exploded);

@@ -43,13 +43,16 @@ export class BombSystem {
     player.lastBombTime = Date.now();
   }
 
-  public updateBombs(bombs: Bomb[], map: MapTile[][], players: Player[], deltaTime: number): void {
+  public updateBombs(bombs: Bomb[], map: MapTile[][], players: Player[], deltaTime: number): Array<{x: number, y: number}>[] {
+    const explosionPositions: Array<{x: number, y: number}>[] = [];
+    
     bombs.forEach(bomb => {
       if (bomb.exploded) return;
       
       // 檢查是否應該爆炸
       if (Date.now() - bomb.placeTime >= BOMB_TIMER || bomb.chainExplode) {
-        this.explodeBomb(bomb, bombs, map, players);
+        const positions = this.explodeBomb(bomb, bombs, map, players);
+        explosionPositions.push(positions);
       }
       
       // 更新踢炸彈移動
@@ -57,9 +60,11 @@ export class BombSystem {
         this.updateKickedBomb(bomb, map);
       }
     });
+    
+    return explosionPositions;
   }
 
-  private explodeBomb(bomb: Bomb, bombs: Bomb[], map: MapTile[][], players: Player[]): void {
+  private explodeBomb(bomb: Bomb, bombs: Bomb[], map: MapTile[][], players: Player[]): Array<{x: number, y: number}> {
     bomb.exploded = true;
     
     // 減少玩家炸彈計數
@@ -69,13 +74,15 @@ export class BombSystem {
     }
     
     // 創建爆炸效果
-    this.createExplosion(bomb, map);
+    const explosionPositions = this.createExplosion(bomb, map);
     
     // 檢查連鎖爆炸
     this.checkChainExplosion(bomb, bombs, map);
+    
+    return explosionPositions;
   }
 
-  private createExplosion(bomb: Bomb, map: MapTile[][]): void {
+  private createExplosion(bomb: Bomb, map: MapTile[][]): Array<{x: number, y: number}> {
     const explosionPositions = this.getExplosionPositions(bomb, map);
     
     explosionPositions.forEach(pos => {
@@ -92,6 +99,8 @@ export class BombSystem {
         }
       }
     });
+    
+    return explosionPositions;
   }
 
   private getExplosionPositions(bomb: Bomb, map: MapTile[][]): Array<{x: number, y: number}> {

@@ -50,6 +50,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 8px;
+  z-index: 10; /* 確保菜單在最上層 */
+  pointer-events: auto; /* 確保可以點擊 */
 }
 
 .menu-content {
@@ -85,6 +87,9 @@
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  pointer-events: auto; /* 確保按鈕可以點擊 */
+  z-index: 11; /* 確保按鈕在最上層 */
+  position: relative; /* 確保 z-index 生效 */
 }
 
 .start-button {
