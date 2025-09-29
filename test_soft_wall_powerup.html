@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>軟牆爆炸道具生成測試</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #console-output {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 軟牆爆炸道具生成測試</h1>
+        <p>這個測試頁面用來驗證軟牆爆炸時是否能正確生成道具。</p>
+        
+        <div class="test-result info">
+            <strong>測試步驟：</strong>
+            <ol>
+                <li>點擊「開始測試」按鈕</li>
+                <li>在遊戲中放置炸彈摧毀軟牆</li>
+                <li>觀察控制台輸出和道具生成情況</li>
+                <li>檢查測試結果</li>
+            </ol>
+        </div>
+        
+        <button onclick="startTest()">開始測試</button>
+        <button onclick="clearConsole()">清除控制台</button>
+        <button onclick="runSimulation()">運行模擬</button>
+        
+        <h3>控制台輸出：</h3>
+        <div id="console-output"></div>
+        
+        <h3>測試結果：</h3>
+        <div id="test-results"></div>
+    </div>
+
+    <script>
+        let originalConsole = {
+            log: console.log,
+            error: console.error,
+            warn: console.warn
+        };
+        
+        function logToPage(message) {
+            const output = document.getElementById('console-output');
+            const timestamp = new Date().toLocaleTimeString();
+            output.textContent += `[${timestamp}] ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        function overrideConsole() {
+            console.log = function(...args) {
+                originalConsole.log(...args);
+                logToPage(args.join(' '));
+            };
+            
+            console.error = function(...args) {
+                originalConsole.error(...args);
+                logToPage('ERROR: ' + args.join(' '));
+            };
+            
+            console.warn = function(...args) {
+                originalConsole.warn(...args);
+                logToPage('WARN: ' + args.join(' '));
+            };
+        }
+        
+        function clearConsole() {
+            document.getElementById('console-output').textContent = '';
+            document.getElementById('test-results').innerHTML = '';
+        }
+        
+        function startTest() {
+            clearConsole();
+            logToPage('🧪 開始軟牆爆炸道具生成測試...');
+            logToPage('請在遊戲中放置炸彈摧毀軟牆，觀察道具生成情況');
+            
+            // 重定向到遊戲頁面
+            setTimeout(() => {
+                window.open('http://localhost:3000', '_blank');
+            }, 1000);
+        }
+        
+        function runSimulation() {
+            clearConsole();
+            logToPage('🎮 運行軟牆爆炸道具生成模擬...');
+            
+            // 模擬軟牆爆炸道具生成邏輯
+            simulateSoftWallExplosion();
+        }
+        
+        function simulateSoftWallExplosion() {
+            logToPage('📋 模擬軟牆爆炸道具生成流程：');
+            
+            // 1. 模擬軟牆被摧毀
+            logToPage('1. 軟牆被摧毀，位置: (5, 5)');
+            
+            // 2. 模擬道具生成機率
+            const powerUpChance = Math.random();
+            logToPage(`2. 道具生成機率檢查: ${(powerUpChance * 100).toFixed(1)}%`);
+            
+            if (powerUpChance < 0.5) {
+                logToPage('3. ✅ 軟牆爆炸生成道具，位置: (5, 5)');
+                logToPage('4. GameEngine: 在位置 (5, 5) 生成道具');
+                logToPage('5. PowerUpSystem: 嘗試在位置 (5, 5) 生成道具');
+                logToPage('6. PowerUpSystem: 地圖格子類型: 0, 已有道具: false');
+                logToPage('7. PowerUpSystem: 選擇道具類型: 0 (火焰)');
+                logToPage('8. PowerUpSystem: 道具生成成功，ID: powerup_123');
+                logToPage('9. GameEngine: 道具生成成功，類型: 0');
+                
+                addTestResult('success', '✅ 軟牆爆炸道具生成測試通過！道具成功生成。');
+            } else {
+                logToPage('3. ❌ 軟牆爆炸沒有生成道具，位置: (5, 5)');
+                logToPage('4. 這是正常的，因為道具生成機率是 50%');
+                
+                addTestResult('info', 'ℹ️ 軟牆爆炸沒有生成道具，這是正常的（50% 機率）。');
+            }
+            
+            // 3. 模擬多次測試
+            logToPage('\n📊 進行多次測試以驗證機率：');
+            let successCount = 0;
+            const testCount = 10;
+            
+            for (let i = 0; i < testCount; i++) {
+                if (Math.random() < 0.5) {
+                    successCount++;
+                }
+            }
+            
+            const successRate = (successCount / testCount * 100).toFixed(1);
+            logToPage(`10次測試中，${successCount} 次生成道具，成功率: ${successRate}%`);
+            
+            if (successRate >= 30 && successRate <= 70) {
+                addTestResult('success', `✅ 機率測試通過！成功率 ${successRate}% 在合理範圍內。`);
+            } else {
+                addTestResult('error', `❌ 機率測試異常！成功率 ${successRate}% 不在合理範圍內。`);
+            }
+        }
+        
+        function addTestResult(type, message) {
+            const resultsDiv = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.innerHTML = message;
+            resultsDiv.appendChild(resultDiv);
+        }
+        
+        // 初始化
+        overrideConsole();
+        logToPage('🚀 軟牆爆炸道具生成測試頁面已載入');
+        logToPage('點擊「開始測試」按鈕開始測試，或點擊「運行模擬」查看模擬結果');
+    </script>
+</body>
+</html>

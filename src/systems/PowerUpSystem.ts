@@ -83,9 +83,10 @@ export class PowerUpSystem {
     const tile = map[y][x];
     console.log(`PowerUpSystem: 地圖格子類型: ${tile.type}, 已有道具: ${tile.hasPowerUp}`);
     
-    if (tile.type !== 0 || tile.hasPowerUp) {
-      console.log(`PowerUpSystem: 格子不是空地或已有道具，無法生成`);
-      return null; // 不是空地或已有道具
+    // 檢查是否為空地
+    if (tile.type !== 0) {
+      console.log(`PowerUpSystem: 格子不是空地，無法生成`);
+      return null;
     }
     
     // 隨機選擇道具類型
