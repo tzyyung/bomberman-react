@@ -318,76 +318,121 @@ export class BombSystem {
     });
   }
 
+  /**
+   * 更新被踢動炸彈的移動狀態
+   * 
+   * 功能說明：
+   * - 處理被踢動炸彈的移動邏輯
+   * - 檢查是否達到最大踢動距離
+   * - 檢測是否遇到玩家（立即引爆）
+   * - 處理炸彈移動的地圖更新
+   * - 實現踢動距離限制和碰撞檢測
+   * 
+   * @param bomb 被踢動的炸彈
+   * @param map 地圖數據
+   * @param players 玩家數組（用於碰撞檢測）
+   */
   private updateKickedBomb(bomb: Bomb, map: MapTile[][], players: Player[]): void {
+    // 如果炸彈沒有踢動方向，直接返回
     if (bomb.kickDirection === null) return;
     
-    // 檢查是否達到最大踢動距離
+    // 獲取炸彈的最大踢動距離（根據踢炸彈道具數量）
     const maxDistance = bomb.maxKickDistance || 1;
+    
+    // 檢查是否已達到最大踢動距離
     if (bomb.kickDistance >= maxDistance) {
       console.log(`炸彈踢動達到最大距離 ${maxDistance}，停止踢動`);
+      // 停止踢動，重置相關狀態
       bomb.kicked = false;
       bomb.kickDirection = null;
       return;
     }
     
-    let newX = bomb.gridX;
-    let newY = bomb.gridY;
+    // 計算炸彈的下一個位置（基於踢動方向）
+    let newX = bomb.gridX; // 新的X坐標
+    let newY = bomb.gridY; // 新的Y坐標
     
+    // 根據踢動方向計算新位置
     switch (bomb.kickDirection) {
-      case Direction.UP:
+      case Direction.UP:    // 向上踢動
         newY -= 1;
         break;
-      case Direction.DOWN:
+      case Direction.DOWN:  // 向下踢動
         newY += 1;
         break;
-      case Direction.LEFT:
+      case Direction.LEFT:  // 向左踢動
         newX -= 1;
         break;
-      case Direction.RIGHT:
+      case Direction.RIGHT: // 向右踢動
         newX += 1;
         break;
     }
     
+    // 輸出調試信息，記錄炸彈移動
     console.log(`炸彈踢動：從 (${bomb.gridX}, ${bomb.gridY}) 到 (${newX}, ${newY})，距離: ${bomb.kickDistance + 1}/${maxDistance}`);
     
-    // 檢查是否遇到玩家
+    // 檢查目標位置是否有玩家（碰撞檢測）
     const playerAtTarget = players.find(p => p.alive && p.gridX === newX && p.gridY === newY);
     if (playerAtTarget) {
+      // 如果遇到玩家，立即引爆炸彈
       console.log(`炸彈踢動遇到玩家 ${playerAtTarget.id}，立即引爆`);
-      bomb.chainExplode = true;
-      bomb.kicked = false;
-      bomb.kickDirection = null;
+      bomb.chainExplode = true; // 標記為連鎖爆炸
+      bomb.kicked = false;      // 停止踢動
+      bomb.kickDirection = null; // 清除踢動方向
       return;
     }
     
-    // 檢查是否可以移動
+    // 檢查炸彈是否可以移動到新位置
     if (this.canMoveBombTo(newX, newY, map)) {
-      // 恢復原位置的地圖格子類型
+      // 恢復原位置的地圖格子類型為空地
       map[bomb.gridY][bomb.gridX].type = 0; // EMPTY
       
-      // 更新炸彈位置
+      // 更新炸彈的網格位置
       bomb.gridX = newX;
       bomb.gridY = newY;
+      
+      // 更新炸彈的像素位置（用於渲染）
       bomb.pixelX = newX * TILE_SIZE + TILE_SIZE / 2;
       bomb.pixelY = newY * TILE_SIZE + TILE_SIZE / 2;
+      
+      // 增加已踢動距離計數
       bomb.kickDistance++;
       
-      // 更新新位置的地圖格子類型
+      // 更新新位置的地圖格子類型為炸彈
       map[newY][newX].type = 3; // BOMB
       
+      // 輸出調試信息，記錄踢動成功
       console.log(`炸彈踢動成功，距離: ${bomb.kickDistance}/${maxDistance}`);
     } else {
+      // 如果無法移動到新位置，停止踢動
       console.log(`炸彈踢動被阻擋，停止踢動`);
-      bomb.kicked = false;
-      bomb.kickDirection = null;
+      bomb.kicked = false;      // 停止踢動狀態
+      bomb.kickDirection = null; // 清除踢動方向
     }
   }
 
+  /**
+   * 檢查炸彈是否可以移動到指定位置
+   * 
+   * 功能說明：
+   * - 檢查目標位置是否在地圖範圍內
+   * - 檢查目標位置是否為空地
+   * - 用於踢動炸彈時的移動驗證
+   * 
+   * @param x 目標X坐標
+   * @param y 目標Y坐標
+   * @param map 地圖數據
+   * @returns 是否可以移動到該位置
+   */
   private canMoveBombTo(x: number, y: number, map: MapTile[][]): boolean {
+    // 檢查目標位置是否超出地圖邊界
     if (x < 0 || x >= map[0].length || y < 0 || y >= map.length) return false;
     
+    // 獲取目標位置的地圖格子信息
     const tile = map[y][x];
-    return tile.type === 0; // EMPTY
+    
+    // 只有空地（類型0 = EMPTY）才能放置炸彈
+    return tile.type === 0;
   }
 
   private findBombNearPlayer(player: Player, bombs: Bomb[]): Bomb | null {
