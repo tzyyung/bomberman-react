@@ -72,6 +72,16 @@ export class PlayerSystem {
   public movePlayer(player: Player, direction: Direction, map: MapTile[][]): void {
     if (!player.alive) return;
     
+    // 檢查玩家是否已經在移動中
+    const targetX = player.gridX * TILE_SIZE + TILE_SIZE / 2;
+    const targetY = player.gridY * TILE_SIZE + TILE_SIZE / 2;
+    const dx = targetX - player.pixelX;
+    const dy = targetY - player.pixelY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    // 如果玩家還在移動中，不允許新的移動
+    if (distance > 2) return;
+    
     let newX = player.gridX;
     let newY = player.gridY;
     

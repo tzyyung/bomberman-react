@@ -3,12 +3,17 @@
  * 負責用戶界面渲染
  */
 
-import { GameState, Player } from '../types';
-import { WHITE, GRAY, LIGHT_GREEN, BLUE, RED } from '../constants';
+import { GameState, Player, PowerUp } from '../types';
+import { WHITE, GRAY, LIGHT_GREEN, BLUE, RED, TILE_SIZE } from '../constants';
 
 export class UISystem {
   public render(ctx: CanvasRenderingContext2D, gameState: GameState): void {
     this.renderHUD(ctx, gameState);
+    
+    // 渲染道具
+    if (gameState.state === 'playing') {
+      this.renderPowerUps(ctx, gameState.powerUps);
+    }
     
     if (gameState.state === 'menu') {
       this.renderMenu(ctx);
@@ -199,6 +204,50 @@ export class UISystem {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(text, x, y);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  private renderPowerUps(ctx: CanvasRenderingContext2D, powerUps: PowerUp[]): void {
+    powerUps.forEach(powerUp => {
+      if (powerUp.collected) return;
+      
+      this.renderPowerUp(ctx, powerUp);
+    });
+  }
+
+  private renderPowerUp(ctx: CanvasRenderingContext2D, powerUp: PowerUp): void {
+    const size = TILE_SIZE * 0.6;
+    const x = powerUp.pixelX - size / 2;
+    const y = powerUp.pixelY - size / 2;
+    
+    // 道具背景
+    ctx.fillStyle = '#FFD700';
+    ctx.fillRect(x, y, size, size);
+    
+    // 道具邊框
+    ctx.strokeStyle = '#FFA500';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, size, size);
+    
+    // 道具圖標（簡單的符號）
+    ctx.fillStyle = '#000000';
+    ctx.font = 'bold 20px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    let symbol = '?';
+    switch (powerUp.type) {
+      case 0: symbol = '🔥'; break; // 火焰
+      case 1: symbol = '💣'; break; // 炸彈
+      case 2: symbol = '⚡'; break; // 速度
+      case 3: symbol = '👟'; break; // 踢炸彈
+      case 4: symbol = '💥'; break; // 穿透
+      case 5: symbol = '📱'; break; // 遙控
+      case 6: symbol = '🛡️'; break; // 防護罩
+    }
+    
+    ctx.fillText(symbol, powerUp.pixelX, powerUp.pixelY);
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
   }

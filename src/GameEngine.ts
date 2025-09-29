@@ -275,9 +275,10 @@ export class GameEngine {
     // 更新炸彈
     const explosionPositions = this.systems.bomb.updateBombs(this.gameState.bombs, this.gameState.map, this.gameState.players, deltaTime);
     
-    // 創建爆炸效果
+    // 創建爆炸效果和道具
     explosionPositions.forEach(positions => {
       positions.forEach(pos => {
+        // 創建爆炸效果
         const explosion = {
           id: `explosion_${Date.now()}_${Math.random()}`,
           gridX: pos.x,
@@ -290,6 +291,16 @@ export class GameEngine {
           direction: null as any,
         };
         this.gameState.explosions.push(explosion);
+        
+        // 檢查是否需要生成道具
+        if (this.gameState.map[pos.y][pos.x].hasPowerUp) {
+          const powerUp = this.systems.powerUp.generatePowerUpAt(pos.x, pos.y, this.gameState.map);
+          if (powerUp) {
+            this.gameState.powerUps.push(powerUp);
+          }
+          // 清除地圖上的道具標記
+          this.gameState.map[pos.y][pos.x].hasPowerUp = false;
+        }
       });
     });
     

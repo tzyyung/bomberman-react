@@ -92,10 +92,8 @@ export class BombSystem {
         
         // 30% 機率生成道具
         if (Math.random() < 0.3) {
+          // 道具生成將在 GameEngine 中處理
           map[pos.y][pos.x].hasPowerUp = true;
-          // 隨機選擇道具類型
-          const powerUpTypes = [0, 1, 2, 3, 4, 5, 6]; // 所有道具類型
-          map[pos.y][pos.x].powerUpType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
         }
       }
     });
