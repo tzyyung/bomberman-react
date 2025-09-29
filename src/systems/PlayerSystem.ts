@@ -36,34 +36,11 @@ export class PlayerSystem {
     players.forEach(player => {
       if (!player.alive) return;
       
-      this.updatePlayerPosition(player, map, deltaTime);
+      // 簡化：只更新玩家能力，不需要複雜的位置更新
       this.updatePlayerAbilities(player);
     });
   }
 
-  private updatePlayerPosition(player: Player, map: MapTile[][], deltaTime: number): void {
-    // 平滑移動到目標位置
-    const targetX = player.gridX * TILE_SIZE + TILE_SIZE / 2;
-    const targetY = player.gridY * TILE_SIZE + TILE_SIZE / 2;
-    
-    const dx = targetX - player.pixelX;
-    const dy = targetY - player.pixelY;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    
-    if (distance > 0.5) {
-      // 極速移動，幾乎即時到達
-      const moveSpeed = player.speed * 2.0; // 極速移動
-      const moveX = (dx / distance) * moveSpeed * deltaTime;
-      const moveY = (dy / distance) * moveSpeed * deltaTime;
-      
-      player.pixelX += moveX;
-      player.pixelY += moveY;
-    } else {
-      // 直接設置到目標位置，避免微小抖動
-      player.pixelX = targetX;
-      player.pixelY = targetY;
-    }
-  }
 
   private updatePlayerAbilities(player: Player): void {
     // 更新防護罩狀態
@@ -98,6 +75,9 @@ export class PlayerSystem {
       player.gridX = newX;
       player.gridY = newY;
       player.direction = direction;
+      // 立即更新像素位置，簡單直接
+      player.pixelX = player.gridX * TILE_SIZE + TILE_SIZE / 2;
+      player.pixelY = player.gridY * TILE_SIZE + TILE_SIZE / 2;
     }
   }
 

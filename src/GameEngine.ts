@@ -28,7 +28,6 @@ export class GameEngine {
   private lastTime: number = 0;
   private animationId: number | null = null;
   private inputQueue: InputEvent[] = [];
-  private lastFrameTime: number = 0;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -251,27 +250,15 @@ export class GameEngine {
     const deltaTime = currentTime - this.lastTime;
     this.lastTime = currentTime;
 
-    // 限制更新頻率到 60 FPS，減少不必要的計算
-    if (deltaTime >= 16.67) {
-      if (!this.gameState.paused) {
-        this.update(deltaTime);
-      }
-      
-      this.render();
-      this.monitorPerformance();
+    if (!this.gameState.paused) {
+      this.update(deltaTime);
     }
+    
+    this.render();
     
     this.animationId = requestAnimationFrame(() => this.gameLoop());
   }
 
-  private monitorPerformance(): void {
-    const fps = 1000 / (performance.now() - this.lastFrameTime);
-    this.lastFrameTime = performance.now();
-    
-    if (fps < 55) {
-      console.warn('FPS 過低:', fps.toFixed(1));
-    }
-  }
 
   private update(deltaTime: number): void {
     // 處理輸入
@@ -332,11 +319,11 @@ export class GameEngine {
   }
 
   private processInput(): void {
-    // 立即處理所有輸入，減少延遲
-    const inputs = this.inputQueue.splice(0); // 一次性取出所有輸入
-    inputs.forEach(input => {
+    // 簡單直接：逐個處理輸入
+    while (this.inputQueue.length > 0) {
+      const input = this.inputQueue.shift()!;
       this.handleInput(input);
-    });
+    }
   }
 
   private handleInput(input: InputEvent): void {
