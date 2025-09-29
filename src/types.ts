@@ -59,6 +59,7 @@ export interface Bomb {
   kickSpeed: number;
   kickDistance: number;
   maxKickDistance?: number; // 最大踢動距離
+  canPierce: boolean; // 穿透能力
   remote: boolean;
 }
 

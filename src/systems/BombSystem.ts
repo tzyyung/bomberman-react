@@ -36,6 +36,7 @@ export class BombSystem {
       kickSpeed: 2,
       kickDistance: 0,
       maxKickDistance: player.kickCount || 1,
+      canPierce: player.canPierce,
       remote: player.canRemote,
     };
     
@@ -63,7 +64,7 @@ export class BombSystem {
       
       // 更新踢炸彈移動
       if (bomb.kicked) {
-        this.updateKickedBomb(bomb, map);
+        this.updateKickedBomb(bomb, map, players);
       }
     });
     
@@ -117,7 +118,7 @@ export class BombSystem {
   private getExplosionPositions(bomb: Bomb, map: MapTile[][]): Array<{x: number, y: number}> {
     const positions = [{ x: bomb.gridX, y: bomb.gridY }];
     
-    console.log(`炸彈爆炸，威力: ${bomb.power}，位置: (${bomb.gridX}, ${bomb.gridY})`);
+    console.log(`炸彈爆炸，威力: ${bomb.power}，穿透能力: ${bomb.canPierce}，位置: (${bomb.gridX}, ${bomb.gridY})`);
     
     // 四個方向的爆炸
     const directions = [
@@ -140,7 +141,16 @@ export class BombSystem {
         positions.push({ x, y });
         console.log(`爆炸位置: (${x}, ${y})`);
         
-        if (tile.type === 2) break; // 軟牆停止爆炸
+        // 如果沒有穿透能力，軟牆停止爆炸
+        if (tile.type === 2 && !bomb.canPierce) {
+          console.log(`軟牆停止爆炸，位置: (${x}, ${y})`);
+          break;
+        }
+        
+        // 如果有穿透能力，軟牆不會停止爆炸
+        if (tile.type === 2 && bomb.canPierce) {
+          console.log(`穿透軟牆，繼續爆炸，位置: (${x}, ${y})`);
+        }
       }
     });
     
@@ -164,7 +174,7 @@ export class BombSystem {
     });
   }
 
-  private updateKickedBomb(bomb: Bomb, map: MapTile[][]): void {
+  private updateKickedBomb(bomb: Bomb, map: MapTile[][], players: Player[]): void {
     if (bomb.kickDirection === null) return;
     
     // 檢查是否達到最大踢動距離
@@ -195,6 +205,16 @@ export class BombSystem {
     }
     
     console.log(`炸彈踢動：從 (${bomb.gridX}, ${bomb.gridY}) 到 (${newX}, ${newY})，距離: ${bomb.kickDistance + 1}/${maxDistance}`);
+    
+    // 檢查是否遇到玩家
+    const playerAtTarget = players.find(p => p.alive && p.gridX === newX && p.gridY === newY);
+    if (playerAtTarget) {
+      console.log(`炸彈踢動遇到玩家 ${playerAtTarget.id}，立即引爆`);
+      bomb.chainExplode = true;
+      bomb.kicked = false;
+      bomb.kickDirection = null;
+      return;
+    }
     
     // 檢查是否可以移動
     if (this.canMoveBombTo(newX, newY, map)) {
@@ -380,6 +400,21 @@ export class BombSystem {
     ctx.strokeStyle = '#FFFFFF';
     ctx.lineWidth = 2;
     ctx.strokeRect(x, y, size, size);
+    
+    // 如果炸彈有穿透能力，添加特殊效果
+    if (bomb.canPierce) {
+      // 穿透效果：紫色邊框
+      ctx.strokeStyle = '#8A2BE2';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(x - 1, y - 1, size + 2, size + 2);
+      
+      // 穿透標記
+      ctx.fillStyle = '#8A2BE2';
+      ctx.font = 'bold 10px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('💥', bomb.pixelX, bomb.pixelY + size/2 + 8);
+    }
     
     // 如果炸彈被踢動，添加特殊效果
     if (bomb.kicked) {
