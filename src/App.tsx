@@ -97,12 +97,86 @@ const App: React.FC = () => {
     <div className="App" onKeyDown={handleKeyDown} tabIndex={0}>
       <header className="App-header">
         <div className="game-container">
+          {/* 左側玩家1按鍵提示 */}
+          <div className="player-controls-left">
+            <div className="control-panel player1-panel">
+              <h3>玩家 1 (藍色)</h3>
+              <div className="control-grid">
+                <div className="control-item">
+                  <span className="key">W</span>
+                  <span className="action">向上</span>
+                </div>
+                <div className="control-item">
+                  <span className="key">A</span>
+                  <span className="action">向左</span>
+                </div>
+                <div className="control-item">
+                  <span className="key">S</span>
+                  <span className="action">向下</span>
+                </div>
+                <div className="control-item">
+                  <span className="key">D</span>
+                  <span className="action">向右</span>
+                </div>
+                <div className="control-item">
+                  <span className="key">空白鍵</span>
+                  <span className="action">放置炸彈</span>
+                </div>
+                <div className="control-item">
+                  <span className="key">B</span>
+                  <span className="action">踢炸彈</span>
+                </div>
+                <div className="control-item">
+                  <span className="key">V</span>
+                  <span className="action">遙控引爆</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <canvas
             ref={canvasRef}
             width={832}
             height={704}
             style={{ border: '2px solid #333', backgroundColor: '#000' }}
           />
+
+          {/* 右側玩家2按鍵提示 */}
+          <div className="player-controls-right">
+            <div className="control-panel player2-panel">
+              <h3>玩家 2 (紅色)</h3>
+              <div className="control-grid">
+                <div className="control-item">
+                  <span className="key">↑</span>
+                  <span className="action">向上</span>
+                </div>
+                <div className="control-item">
+                  <span className="key">←</span>
+                  <span className="action">向左</span>
+                </div>
+                <div className="control-item">
+                  <span className="key">↓</span>
+                  <span className="action">向下</span>
+                </div>
+                <div className="control-item">
+                  <span className="key">→</span>
+                  <span className="action">向右</span>
+                </div>
+                <div className="control-item">
+                  <span className="key">Enter</span>
+                  <span className="action">放置炸彈</span>
+                </div>
+                <div className="control-item">
+                  <span className="key">右 Shift</span>
+                  <span className="action">踢炸彈</span>
+                </div>
+                <div className="control-item">
+                  <span className="key">/</span>
+                  <span className="action">遙控引爆</span>
+                </div>
+              </div>
+            </div>
+          </div>
           
           {!isGameStarted && (
             <div className="menu-overlay">
@@ -172,24 +246,10 @@ const App: React.FC = () => {
           )}
         </div>
         
+        {/* 通用控制說明 */}
         <div className="controls-info">
-          <h3>遊戲控制</h3>
+          <h3>通用控制</h3>
           <div className="control-section">
-            <h4>玩家 1 (藍色)</h4>
-            <p>移動: W A S D</p>
-            <p>炸彈: 空白鍵</p>
-            <p>踢炸彈: B 鍵</p>
-            <p>遙控: V 鍵</p>
-          </div>
-          <div className="control-section">
-            <h4>玩家 2 (紅色)</h4>
-            <p>移動: 方向鍵</p>
-            <p>炸彈: Enter 鍵</p>
-            <p>踢炸彈: 右 Shift 鍵</p>
-            <p>遙控: / 鍵</p>
-          </div>
-          <div className="control-section">
-            <h4>通用</h4>
             <p>暫停/繼續: ESC 鍵</p>
             <p>重新開始: R 鍵</p>
           </div>

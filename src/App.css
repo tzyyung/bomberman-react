@@ -23,20 +23,119 @@
 
 .game-container {
   position: relative;
-  display: inline-block;
-  margin: 10px 0;
-  flex: 1; /* 讓遊戲容器佔據剩餘空間 */
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
+  margin: 10px 0;
+  flex: 1; /* 讓遊戲容器佔據剩餘空間 */
+  gap: 20px; /* 左右控制面板與canvas之間的間距 */
 }
 
 .game-container canvas {
   display: block;
-  margin: 0 auto;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   border-radius: 8px;
+  flex-shrink: 0; /* 防止canvas被壓縮 */
+}
+
+/* 左側玩家1控制面板 */
+.player-controls-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 200px;
+}
+
+/* 右側玩家2控制面板 */
+.player-controls-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 200px;
+}
+
+/* 控制面板樣式 */
+.control-panel {
+  background: linear-gradient(145deg, #2c3e50, #34495e);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  min-width: 180px;
+}
+
+.control-panel h3 {
+  margin: 0 0 15px 0;
+  font-size: 1.2rem;
+  text-align: center;
+  color: #ecf0f1;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* 玩家1面板特殊樣式 */
+.player1-panel {
+  border-left: 4px solid #3498db; /* 藍色邊框 */
+}
+
+.player1-panel h3 {
+  color: #3498db;
+}
+
+/* 玩家2面板特殊樣式 */
+.player2-panel {
+  border-left: 4px solid #e74c3c; /* 紅色邊框 */
+}
+
+.player2-panel h3 {
+  color: #e74c3c;
+}
+
+/* 控制網格 */
+.control-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.control-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
+}
+
+.control-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(2px);
+}
+
+.control-item .key {
+  background: linear-gradient(145deg, #3498db, #2980b9);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  min-width: 40px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.player2-panel .control-item .key {
+  background: linear-gradient(145deg, #e74c3c, #c0392b);
+}
+
+.control-item .action {
+  color: #bdc3c7;
+  font-size: 0.9rem;
+  margin-left: 10px;
 }
 
 .menu-overlay {
@@ -148,15 +247,63 @@
 }
 
 /* 響應式設計 */
+@media (max-width: 1200px) {
+  .game-container {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .player-controls-left,
+  .player-controls-right {
+    min-width: auto;
+    width: 100%;
+    max-width: 400px;
+  }
+  
+  .control-panel {
+    min-width: auto;
+    width: 100%;
+  }
+}
+
 @media (max-width: 768px) {
   .App-header h1 {
     font-size: 2rem;
+  }
+  
+  .game-container {
+    flex-direction: column;
+    gap: 10px;
   }
   
   .game-container canvas {
     width: 100%;
     max-width: 832px;
     height: auto;
+  }
+  
+  .player-controls-left,
+  .player-controls-right {
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .control-panel {
+    padding: 15px;
+  }
+  
+  .control-item {
+    padding: 6px 10px;
+  }
+  
+  .control-item .key {
+    font-size: 0.8rem;
+    padding: 3px 6px;
+    min-width: 35px;
+  }
+  
+  .control-item .action {
+    font-size: 0.8rem;
   }
   
   .menu-content {
