@@ -54,8 +54,14 @@ const App: React.FC = () => {
   };
 
   const handleRestartGame = () => {
+    console.log('重新開始按鈕被點擊');
     if (gameEngineRef.current) {
+      console.log('調用 restartGame');
       gameEngineRef.current.restartGame();
+      setIsGameStarted(true); // 確保遊戲狀態正確
+      console.log('重新開始完成');
+    } else {
+      console.log('gameEngineRef.current 為 null');
     }
   };
 

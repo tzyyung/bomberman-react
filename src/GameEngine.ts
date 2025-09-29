@@ -232,9 +232,37 @@ export class GameEngine {
   }
 
   public restartGame(): void {
+    console.log('GameEngine: restartGame 被調用');
+    
+    // 停止當前的遊戲循環
+    if (this.animationId) {
+      cancelAnimationFrame(this.animationId);
+      this.animationId = null;
+    }
+    
+    // 重置遊戲狀態
+    this.gameState = {
+      state: 'menu',
+      winner: null,
+      players: [],
+      bombs: [],
+      powerUps: [],
+      explosions: [],
+      map: [],
+      score: { player1: 0, player2: 0 },
+      time: 0,
+      paused: false,
+    };
+    
+    console.log('GameEngine: 遊戲狀態已重置');
+    
+    // 重新初始化遊戲
     this.initializeGame();
     this.gameState.state = 'playing';
+    this.lastTime = performance.now();
     this.gameLoop();
+    
+    console.log('GameEngine: 遊戲重新開始完成，狀態:', this.gameState.state);
   }
 
   public showMenu(): void {
