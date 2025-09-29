@@ -1,82 +1,114 @@
 /**
- * 遊戲引擎核心類
- * 負責管理遊戲狀態、更新和渲染
+ * 遊戲引擎核心類 (GameEngine)
+ * 
+ * 功能說明：
+ * - 管理整個遊戲的生命週期和狀態
+ * - 協調各個子系統的運行和更新
+ * - 處理用戶輸入和遊戲事件
+ * - 控制遊戲循環和渲染流程
+ * - 管理遊戲配置和初始化
+ * - 處理道具生成和定時事件
+ * 
+ * 主要方法：
+ * - constructor: 初始化遊戲引擎
+ * - startGame: 開始遊戲
+ * - restartGame: 重新開始遊戲
+ * - pauseGame: 暫停遊戲
+ * - resumeGame: 繼續遊戲
+ * - update: 更新遊戲狀態
+ * - render: 渲染遊戲畫面
+ * - handleInput: 處理用戶輸入
+ * - gameLoop: 遊戲主循環
  */
 
-import { GameState, InputEvent, GameConfig, Player } from './types';
-import { Direction, MAP_WIDTH, MAP_HEIGHT, TILE_SIZE, PLAYER_SPEED, BOMB_TIMER, EXPLOSION_DURATION } from './constants';
-import { MapSystem } from './systems/MapSystem';
-import { PlayerSystem } from './systems/PlayerSystem';
-import { BombSystem } from './systems/BombSystem';
-import { PowerUpSystem } from './systems/PowerUpSystem';
-import { AudioSystem } from './systems/AudioSystem';
-import { UISystem } from './systems/UISystem';
+import { GameState, InputEvent, GameConfig, Player } from './types'; // 導入類型定義
+import { Direction, MAP_WIDTH, MAP_HEIGHT, TILE_SIZE, PLAYER_SPEED, BOMB_TIMER, EXPLOSION_DURATION } from './constants'; // 導入常數定義
+import { MapSystem } from './systems/MapSystem'; // 地圖系統
+import { PlayerSystem } from './systems/PlayerSystem'; // 玩家系統
+import { BombSystem } from './systems/BombSystem'; // 炸彈系統
+import { PowerUpSystem } from './systems/PowerUpSystem'; // 道具系統
+import { AudioSystem } from './systems/AudioSystem'; // 音頻系統
+import { UISystem } from './systems/UISystem'; // UI系統
 
 export class GameEngine {
-  private canvas: HTMLCanvasElement;
-  private ctx: CanvasRenderingContext2D;
-  private gameState: GameState;
-  private config: GameConfig;
-  private systems: {
-    map: MapSystem;
-    player: PlayerSystem;
-    bomb: BombSystem;
-    powerUp: PowerUpSystem;
-    audio: AudioSystem;
-    ui: UISystem;
+  private canvas: HTMLCanvasElement; // Canvas 元素
+  private ctx: CanvasRenderingContext2D; // Canvas 2D 渲染上下文
+  private gameState: GameState; // 遊戲狀態
+  private config: GameConfig; // 遊戲配置
+  private systems: { // 各個子系統
+    map: MapSystem; // 地圖系統
+    player: PlayerSystem; // 玩家系統
+    bomb: BombSystem; // 炸彈系統
+    powerUp: PowerUpSystem; // 道具系統
+    audio: AudioSystem; // 音頻系統
+    ui: UISystem; // UI系統
   };
-  private lastTime: number = 0;
-  private animationId: number | null = null;
-  private inputQueue: InputEvent[] = [];
-  private lastPowerUpSpawnTime: number = 0;
-  private powerUpSpawnInterval: number = 10000; // 10秒
+  private lastTime: number = 0; // 上一幀的時間戳
+  private animationId: number | null = null; // 動畫幀ID
+  private inputQueue: InputEvent[] = []; // 輸入事件隊列
+  private lastPowerUpSpawnTime: number = 0; // 上次道具生成時間
+  private powerUpSpawnInterval: number = 10000; // 道具生成間隔（10秒）
 
+  /**
+   * 遊戲引擎構造函數
+   * 
+   * 功能說明：
+   * - 初始化 Canvas 和渲染上下文
+   * - 設置遊戲配置參數
+   * - 初始化遊戲狀態
+   * - 創建各個子系統實例
+   * - 設置事件監聽器
+   * 
+   * @param canvas HTML Canvas 元素
+   */
   constructor(canvas: HTMLCanvasElement) {
+    // 保存 Canvas 元素和獲取 2D 渲染上下文
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d')!;
     
-    // 設置畫布大小
+    // 設置畫布大小（832x704 像素）
     this.canvas.width = 832;
     this.canvas.height = 704;
     
-    // 初始化配置
+    // 初始化遊戲配置參數
     this.config = {
-      mapWidth: MAP_WIDTH,
-      mapHeight: MAP_HEIGHT,
-      tileSize: TILE_SIZE,
-      playerSpeed: PLAYER_SPEED,
-      bombTimer: BOMB_TIMER,
-      explosionDuration: EXPLOSION_DURATION,
-      maxBombs: 1,
-      bombPower: 1,
-      powerUpChance: 0.3,
-      gameTime: 300000, // 5分鐘
+      mapWidth: MAP_WIDTH,        // 地圖寬度（網格）
+      mapHeight: MAP_HEIGHT,      // 地圖高度（網格）
+      tileSize: TILE_SIZE,        // 格子大小（像素）
+      playerSpeed: PLAYER_SPEED,  // 玩家移動速度
+      bombTimer: BOMB_TIMER,      // 炸彈計時器（毫秒）
+      explosionDuration: EXPLOSION_DURATION, // 爆炸持續時間
+      maxBombs: 1,                // 最大炸彈數量（初始值）
+      bombPower: 1,               // 炸彈威力（初始值）
+      powerUpChance: 0.3,         // 道具生成機率（30%）
+      gameTime: 300000,           // 遊戲時間（5分鐘）
     };
 
     // 初始化遊戲狀態
     this.gameState = {
-      state: 'menu',
-      winner: null,
-      players: [],
-      bombs: [],
-      powerUps: [],
-      explosions: [],
-      map: [],
-      score: { player1: 0, player2: 0 },
-      time: 0,
-      paused: false,
+      state: 'menu',              // 遊戲狀態（菜單）
+      winner: null,               // 獲勝者（初始為空）
+      players: [],                // 玩家數組
+      bombs: [],                  // 炸彈數組
+      powerUps: [],               // 道具數組
+      explosions: [],             // 爆炸數組
+      map: [],                    // 地圖數據
+      score: { player1: 0, player2: 0 }, // 分數統計
+      time: 0,                    // 遊戲時間
+      paused: false,              // 暫停狀態
     };
 
-    // 初始化系統
+    // 初始化各個子系統
     this.systems = {
-      map: new MapSystem(),
-      player: new PlayerSystem(),
-      bomb: new BombSystem(),
-      powerUp: new PowerUpSystem(),
-      audio: new AudioSystem(),
-      ui: new UISystem(),
+      map: new MapSystem(),       // 地圖系統
+      player: new PlayerSystem(), // 玩家系統
+      bomb: new BombSystem(),     // 炸彈系統
+      powerUp: new PowerUpSystem(), // 道具系統
+      audio: new AudioSystem(),   // 音頻系統
+      ui: new UISystem(),         // UI系統
     };
 
+    // 設置事件監聽器（鍵盤輸入等）
     this.setupEventListeners();
   }
 
