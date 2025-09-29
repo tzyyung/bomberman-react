@@ -28,6 +28,8 @@ export class GameEngine {
   private lastTime: number = 0;
   private animationId: number | null = null;
   private inputQueue: InputEvent[] = [];
+  private worker: Worker | null = null;
+  private useWorker: boolean = true;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -75,7 +77,38 @@ export class GameEngine {
       ui: new UISystem(),
     };
 
+    // 初始化 Web Worker
+    this.initWorker();
+
     this.setupEventListeners();
+  }
+
+  private initWorker(): void {
+    if (typeof Worker !== 'undefined' && this.useWorker) {
+      try {
+        this.worker = new Worker('/game-worker.js');
+        
+        this.worker.onmessage = (e) => {
+          const { type, gameState } = e.data;
+          
+          if (type === 'GAME_UPDATE' && gameState) {
+            this.gameState = gameState;
+          }
+        };
+        
+        this.worker.onerror = (error) => {
+          console.warn('Web Worker 初始化失敗，回退到主線程模式:', error);
+          this.useWorker = false;
+          this.worker = null;
+        };
+      } catch (error) {
+        console.warn('Web Worker 不支持，回退到主線程模式:', error);
+        this.useWorker = false;
+        this.worker = null;
+      }
+    } else {
+      this.useWorker = false;
+    }
   }
 
   private setupEventListeners(): void {
@@ -203,24 +236,57 @@ export class GameEngine {
   public startGame(): void {
     this.initializeGame();
     this.gameState.state = 'playing';
-    this.gameLoop();
+    
+    if (this.worker && this.useWorker) {
+      // 使用 Web Worker
+      this.worker.postMessage({
+        type: 'INIT',
+        data: {
+          gameState: this.gameState,
+          systems: this.systems
+        }
+      });
+    } else {
+      // 回退到主線程
+      this.gameLoop();
+    }
   }
 
   public pauseGame(): void {
     this.gameState.paused = true;
     this.gameState.state = 'paused';
+    
+    if (this.worker && this.useWorker) {
+      this.worker.postMessage({ type: 'PAUSE' });
+    }
   }
 
   public resumeGame(): void {
     this.gameState.paused = false;
     this.gameState.state = 'playing';
-    this.gameLoop();
+    
+    if (this.worker && this.useWorker) {
+      this.worker.postMessage({ type: 'RESUME' });
+    } else {
+      this.gameLoop();
+    }
   }
 
   public restartGame(): void {
     this.initializeGame();
     this.gameState.state = 'playing';
-    this.gameLoop();
+    
+    if (this.worker && this.useWorker) {
+      this.worker.postMessage({
+        type: 'INIT',
+        data: {
+          gameState: this.gameState,
+          systems: this.systems
+        }
+      });
+    } else {
+      this.gameLoop();
+    }
   }
 
   public showMenu(): void {
@@ -326,7 +392,17 @@ export class GameEngine {
   private processInput(): void {
     while (this.inputQueue.length > 0) {
       const input = this.inputQueue.shift()!;
-      this.handleInput(input);
+      
+      if (this.worker && this.useWorker) {
+        // 發送到 Web Worker
+        this.worker.postMessage({
+          type: 'INPUT',
+          data: input
+        });
+      } else {
+        // 主線程處理
+        this.handleInput(input);
+      }
     }
   }
 
@@ -458,6 +534,12 @@ export class GameEngine {
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);
     }
+    
+    if (this.worker) {
+      this.worker.terminate();
+      this.worker = null;
+    }
+    
     document.removeEventListener('keydown', this.handleKeyDown);
     document.removeEventListener('keyup', this.handleKeyUp);
   }
