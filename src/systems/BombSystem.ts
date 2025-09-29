@@ -1,173 +1,317 @@
 /**
- * 炸彈系統
- * 負責炸彈管理、爆炸邏輯和渲染
+ * 炸彈系統 (BombSystem)
+ * 
+ * 功能說明：
+ * - 管理遊戲中所有炸彈的生命週期
+ * - 處理炸彈的放置、爆炸、連鎖爆炸邏輯
+ * - 實現炸彈的踢動功能和碰撞檢測
+ * - 支持穿透道具的爆炸穿透效果
+ * - 提供炸彈的視覺渲染和動畫效果
+ * 
+ * 主要方法：
+ * - placeBomb: 放置新炸彈
+ * - updateBombs: 更新所有炸彈狀態
+ * - explodeBomb: 處理炸彈爆炸
+ * - kickBomb: 踢動炸彈功能
+ * - render: 渲染炸彈視覺效果
  */
 
-import { Bomb, Player, MapTile } from '../types';
-import { TILE_SIZE, BOMB_TIMER, Direction } from '../constants';
+import { Bomb, Player, MapTile } from '../types'; // 導入類型定義
+import { TILE_SIZE, BOMB_TIMER, Direction } from '../constants'; // 導入常數定義
 
 export class BombSystem {
-  private bombIdCounter = 0;
+  private bombIdCounter = 0; // 炸彈ID計數器，確保每個炸彈都有唯一ID
 
+  /**
+   * 放置炸彈方法
+   * 
+   * 功能說明：
+   * - 檢查玩家是否可以放置炸彈（數量限制、冷卻時間）
+   * - 檢查位置是否已有炸彈（避免重疊）
+   * - 創建新炸彈並設置所有屬性
+   * - 更新地圖格子類型和玩家狀態
+   * 
+   * @param player 放置炸彈的玩家
+   * @param bombs 炸彈數組
+   * @param map 地圖數據
+   */
   public placeBomb(player: Player, bombs: Bomb[], map: MapTile[][]): void {
-    // 檢查是否可以放置炸彈
+    // 檢查玩家炸彈數量是否達到上限
     if (player.bombCount >= player.maxBombs) return;
-    if (Date.now() - player.lastBombTime < 500) return; // 防止快速連續放置
     
-    // 檢查位置是否已有炸彈
+    // 檢查放置冷卻時間，防止快速連續放置（500ms冷卻）
+    if (Date.now() - player.lastBombTime < 500) return;
+    
+    // 檢查玩家當前位置是否已有炸彈，避免重疊放置
     const existingBomb = bombs.find(b => b.gridX === player.gridX && b.gridY === player.gridY);
     if (existingBomb) return;
     
-    // 創建新炸彈
+    // 創建新炸彈對象，設置所有必要屬性
     const bomb: Bomb = {
-      id: `bomb_${this.bombIdCounter++}`,
-      gridX: player.gridX,
-      gridY: player.gridY,
-      pixelX: player.gridX * TILE_SIZE + TILE_SIZE / 2,
-      pixelY: player.gridY * TILE_SIZE + TILE_SIZE / 2,
-      power: player.bombPower,
-      ownerId: player.id,
-      placeTime: Date.now(),
-      exploded: false,
-      chainExplode: false,
-      canKick: player.canKick,
-      kicked: false,
-      kickDirection: null,
-      kickSpeed: 2,
-      kickDistance: 0,
-      maxKickDistance: player.kickCount || 1,
-      canPierce: player.canPierce,
-      remote: player.canRemote,
+      id: `bomb_${this.bombIdCounter++}`, // 生成唯一ID
+      gridX: player.gridX, // 網格X坐標
+      gridY: player.gridY, // 網格Y坐標
+      pixelX: player.gridX * TILE_SIZE + TILE_SIZE / 2, // 像素X坐標（中心點）
+      pixelY: player.gridY * TILE_SIZE + TILE_SIZE / 2, // 像素Y坐標（中心點）
+      power: player.bombPower, // 爆炸威力（影響爆炸範圍）
+      ownerId: player.id, // 炸彈擁有者ID
+      placeTime: Date.now(), // 放置時間戳
+      exploded: false, // 是否已爆炸
+      chainExplode: false, // 是否連鎖爆炸
+      canKick: player.canKick, // 是否可以被踢動
+      kicked: false, // 是否正在被踢動
+      kickDirection: null, // 踢動方向
+      kickSpeed: 2, // 踢動速度
+      kickDistance: 0, // 已踢動距離
+      maxKickDistance: player.kickCount || 1, // 最大踢動距離（根據踢炸彈道具數量）
+      canPierce: player.canPierce, // 是否具有穿透能力
+      remote: player.canRemote, // 是否可以被遙控引爆
     };
     
+    // 輸出調試信息，記錄炸彈放置
     console.log(`玩家 ${player.id} 放置炸彈，威力: ${bomb.power}`);
     
-    // 更新地圖格子類型為炸彈
-    map[player.gridY][player.gridX].type = 3; // BOMB
+    // 更新地圖格子類型為炸彈類型（3 = BOMB）
+    map[player.gridY][player.gridX].type = 3;
     
+    // 將新炸彈添加到炸彈數組
     bombs.push(bomb);
+    
+    // 增加玩家炸彈計數
     player.bombCount++;
+    
+    // 更新玩家最後放置炸彈時間
     player.lastBombTime = Date.now();
   }
 
+  /**
+   * 更新所有炸彈狀態
+   * 
+   * 功能說明：
+   * - 遍歷所有未爆炸的炸彈
+   * - 檢查炸彈是否應該爆炸（時間到或連鎖爆炸）
+   * - 處理被踢動炸彈的移動邏輯
+   * - 收集所有爆炸位置用於後續處理
+   * 
+   * @param bombs 炸彈數組
+   * @param map 地圖數據
+   * @param players 玩家數組
+   * @param deltaTime 時間增量（未使用，保留用於未來優化）
+   * @returns 所有爆炸位置的數組
+   */
   public updateBombs(bombs: Bomb[], map: MapTile[][], players: Player[], deltaTime: number): Array<{x: number, y: number}>[] {
+    // 初始化爆炸位置收集數組
     const explosionPositions: Array<{x: number, y: number}>[] = [];
     
+    // 遍歷所有炸彈進行狀態更新
     bombs.forEach(bomb => {
+      // 跳過已爆炸的炸彈
       if (bomb.exploded) return;
       
-      // 檢查是否應該爆炸
+      // 檢查炸彈是否應該爆炸
+      // 條件1：放置時間超過炸彈計時器（BOMB_TIMER毫秒）
+      // 條件2：被標記為連鎖爆炸
       if (Date.now() - bomb.placeTime >= BOMB_TIMER || bomb.chainExplode) {
+        // 執行炸彈爆炸邏輯並收集爆炸位置
         const positions = this.explodeBomb(bomb, bombs, map, players);
         explosionPositions.push(positions);
       }
       
-      // 更新踢炸彈移動
+      // 如果炸彈正在被踢動，更新其移動狀態
       if (bomb.kicked) {
         this.updateKickedBomb(bomb, map, players);
       }
     });
     
+    // 返回所有爆炸位置供其他系統使用
     return explosionPositions;
   }
 
+  /**
+   * 處理炸彈爆炸
+   * 
+   * 功能說明：
+   * - 標記炸彈為已爆炸狀態
+   * - 恢復地圖格子為空地
+   * - 減少玩家炸彈計數
+   * - 創建爆炸效果並摧毀軟牆
+   * - 檢查並觸發連鎖爆炸
+   * 
+   * @param bomb 要爆炸的炸彈
+   * @param bombs 所有炸彈數組（用於連鎖爆炸檢測）
+   * @param map 地圖數據
+   * @param players 玩家數組（用於更新炸彈計數）
+   * @returns 爆炸位置數組
+   */
   private explodeBomb(bomb: Bomb, bombs: Bomb[], map: MapTile[][], players: Player[]): Array<{x: number, y: number}> {
+    // 標記炸彈為已爆炸狀態
     bomb.exploded = true;
     
-    // 恢復地圖格子類型為空地
-    map[bomb.gridY][bomb.gridX].type = 0; // EMPTY
+    // 恢復炸彈位置的地圖格子類型為空地（0 = EMPTY）
+    map[bomb.gridY][bomb.gridX].type = 0;
     
-    // 減少玩家炸彈計數
+    // 找到炸彈擁有者並減少其炸彈計數
     const owner = players.find(p => p.id === bomb.ownerId);
     if (owner) {
+      // 確保炸彈計數不會小於0
       owner.bombCount = Math.max(0, owner.bombCount - 1);
     }
     
-    // 創建爆炸效果
+    // 創建爆炸效果，摧毀軟牆並生成道具
     const explosionPositions = this.createExplosion(bomb, map);
     
-    // 檢查連鎖爆炸
+    // 檢查是否會引發其他炸彈的連鎖爆炸
     this.checkChainExplosion(bomb, bombs, map);
     
+    // 返回爆炸位置供其他系統使用
     return explosionPositions;
   }
 
+  /**
+   * 創建爆炸效果
+   * 
+   * 功能說明：
+   * - 獲取爆炸範圍內的所有位置
+   * - 摧毀爆炸範圍內的軟牆
+   * - 在軟牆位置有機率生成道具
+   * - 標記道具生成位置供後續處理
+   * 
+   * @param bomb 爆炸的炸彈
+   * @param map 地圖數據
+   * @returns 爆炸位置數組
+   */
   private createExplosion(bomb: Bomb, map: MapTile[][]): Array<{x: number, y: number}> {
+    // 獲取炸彈爆炸範圍內的所有位置（考慮穿透能力）
     const explosionPositions = this.getExplosionPositions(bomb, map);
     
+    // 遍歷所有爆炸位置，處理軟牆摧毀和道具生成
     explosionPositions.forEach(pos => {
-      // 摧毀軟牆
-      if (map[pos.y][pos.x].type === 2) { // SOFT_WALL
+      // 檢查該位置是否為軟牆（類型2 = SOFT_WALL）
+      if (map[pos.y][pos.x].type === 2) {
+        // 輸出調試信息，記錄軟牆摧毀
         console.log(`軟牆被摧毀，位置: (${pos.x}, ${pos.y})`);
-        map[pos.y][pos.x].type = 0; // EMPTY
         
-        // 50% 機率生成道具
+        // 將軟牆位置改為空地（類型0 = EMPTY）
+        map[pos.y][pos.x].type = 0;
+        
+        // 50% 機率在軟牆位置生成道具
         if (Math.random() < 0.5) {
+          // 輸出調試信息，記錄道具生成
           console.log(`軟牆爆炸生成道具，位置: (${pos.x}, ${pos.y})`);
-          // 道具生成將在 GameEngine 中處理
+          
+          // 標記該位置有道具，實際道具生成將在 GameEngine 中處理
           map[pos.y][pos.x].hasPowerUp = true;
         } else {
+          // 輸出調試信息，記錄沒有生成道具
           console.log(`軟牆爆炸沒有生成道具，位置: (${pos.x}, ${pos.y})`);
         }
       }
     });
     
+    // 返回所有爆炸位置
     return explosionPositions;
   }
 
+  /**
+   * 獲取炸彈爆炸範圍內的所有位置
+   * 
+   * 功能說明：
+   * - 計算炸彈爆炸的四個方向範圍
+   * - 考慮炸彈的威力和穿透能力
+   * - 硬牆始終停止爆炸
+   * - 軟牆根據穿透能力決定是否停止爆炸
+   * - 返回所有有效的爆炸位置
+   * 
+   * @param bomb 要計算爆炸範圍的炸彈
+   * @param map 地圖數據
+   * @returns 爆炸位置數組
+   */
   private getExplosionPositions(bomb: Bomb, map: MapTile[][]): Array<{x: number, y: number}> {
+    // 初始化爆炸位置數組，包含炸彈本身的位置
     const positions = [{ x: bomb.gridX, y: bomb.gridY }];
     
+    // 輸出調試信息，記錄炸彈爆炸的詳細信息
     console.log(`炸彈爆炸，威力: ${bomb.power}，穿透能力: ${bomb.canPierce}，位置: (${bomb.gridX}, ${bomb.gridY})`);
     
-    // 四個方向的爆炸
+    // 定義四個方向的爆炸向量（上、下、左、右）
     const directions = [
-      { dx: 0, dy: -1 }, // 上
-      { dx: 0, dy: 1 },  // 下
-      { dx: -1, dy: 0 }, // 左
-      { dx: 1, dy: 0 },  // 右
+      { dx: 0, dy: -1 }, // 向上（Y坐標減少）
+      { dx: 0, dy: 1 },  // 向下（Y坐標增加）
+      { dx: -1, dy: 0 }, // 向左（X坐標減少）
+      { dx: 1, dy: 0 },  // 向右（X坐標增加）
     ];
     
+    // 遍歷每個方向，計算爆炸範圍
     directions.forEach(dir => {
+      // 從炸彈位置開始，向該方向擴散，距離等於炸彈威力
       for (let i = 1; i <= bomb.power; i++) {
+        // 計算當前爆炸位置的坐標
         const x = bomb.gridX + dir.dx * i;
         const y = bomb.gridY + dir.dy * i;
         
+        // 檢查是否超出地圖邊界，如果超出則停止該方向的爆炸
         if (x < 0 || x >= map[0].length || y < 0 || y >= map.length) break;
         
+        // 獲取該位置的地圖格子信息
         const tile = map[y][x];
-        if (tile.type === 1) break; // 硬牆停止爆炸
         
+        // 硬牆（類型1）始終停止爆炸，無論是否有穿透能力
+        if (tile.type === 1) break;
+        
+        // 將該位置添加到爆炸位置數組
         positions.push({ x, y });
+        
+        // 輸出調試信息，記錄爆炸位置
         console.log(`爆炸位置: (${x}, ${y})`);
         
-        // 如果沒有穿透能力，軟牆停止爆炸
+        // 如果沒有穿透能力，軟牆（類型2）會停止爆炸
         if (tile.type === 2 && !bomb.canPierce) {
           console.log(`軟牆停止爆炸，位置: (${x}, ${y})`);
-          break;
+          break; // 停止該方向的爆炸擴散
         }
         
-        // 如果有穿透能力，軟牆不會停止爆炸
+        // 如果有穿透能力，軟牆不會停止爆炸，繼續擴散
         if (tile.type === 2 && bomb.canPierce) {
           console.log(`穿透軟牆，繼續爆炸，位置: (${x}, ${y})`);
         }
       }
     });
     
+    // 輸出調試信息，記錄總爆炸位置數量
     console.log(`總共 ${positions.length} 個爆炸位置`);
+    
+    // 返回所有爆炸位置
     return positions;
   }
 
+  /**
+   * 檢查連鎖爆炸
+   * 
+   * 功能說明：
+   * - 檢查當前爆炸是否會影響其他炸彈
+   * - 如果其他炸彈在爆炸範圍內，標記為連鎖爆炸
+   * - 連鎖爆炸的炸彈會在下一幀自動爆炸
+   * - 實現炸彈的連鎖反應效果
+   * 
+   * @param bomb 當前爆炸的炸彈
+   * @param bombs 所有炸彈數組
+   * @param map 地圖數據
+   */
   private checkChainExplosion(bomb: Bomb, bombs: Bomb[], map: MapTile[][]): void {
+    // 獲取當前炸彈的爆炸範圍
     const explosionPositions = this.getExplosionPositions(bomb, map);
     
+    // 遍歷所有其他炸彈，檢查是否在爆炸範圍內
     bombs.forEach(otherBomb => {
+      // 跳過自己或已爆炸的炸彈
       if (otherBomb.id === bomb.id || otherBomb.exploded) return;
       
+      // 檢查其他炸彈是否在當前爆炸的範圍內
       const isInExplosion = explosionPositions.some(pos => 
         pos.x === otherBomb.gridX && pos.y === otherBomb.gridY
       );
       
+      // 如果在爆炸範圍內，標記為連鎖爆炸
       if (isInExplosion) {
         otherBomb.chainExplode = true;
       }
