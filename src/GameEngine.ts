@@ -13,8 +13,6 @@
  * - constructor: 初始化遊戲引擎
  * - startGame: 開始遊戲
  * - restartGame: 重新開始遊戲
- * - pauseGame: 暫停遊戲
- * - resumeGame: 繼續遊戲
  * - update: 更新遊戲狀態
  * - render: 渲染遊戲畫面
  * - handleInput: 處理用戶輸入
@@ -117,12 +115,6 @@ export class GameEngine {
     document.addEventListener('keydown', this.handleKeyDown.bind(this));
     document.addEventListener('keyup', this.handleKeyUp.bind(this));
     
-    // 窗口失焦時暫停遊戲
-    window.addEventListener('blur', () => {
-      if (this.gameState.state === 'playing') {
-        this.pauseGame();
-      }
-    });
   }
 
   private handleKeyDown(event: KeyboardEvent): void {
@@ -131,12 +123,13 @@ export class GameEngine {
     
     // 處理重新開始按鍵
     if (event.key === 'r' || event.key === 'R') {
-      if (this.gameState.state === 'over' || this.gameState.state === 'paused') {
+      if (this.gameState.state === 'over') {
         console.log('鍵盤重新開始被觸發');
         this.restartGame();
         return;
       }
     }
+    
     
     if (this.gameState.state !== 'playing') return;
 
@@ -264,16 +257,6 @@ export class GameEngine {
     this.gameLoop();
   }
 
-  public pauseGame(): void {
-    this.gameState.paused = true;
-    this.gameState.state = 'paused';
-  }
-
-  public resumeGame(): void {
-    this.gameState.paused = false;
-    this.gameState.state = 'playing';
-    this.gameLoop();
-  }
 
   public restartGame(): void {
     console.log('GameEngine: restartGame 被調用');

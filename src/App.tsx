@@ -84,33 +84,7 @@ const App: React.FC = () => {
     }
   };
 
-  /**
-   * 暫停遊戲處理函數
-   * 
-   * 功能說明：
-   * - 調用遊戲引擎的暫停遊戲方法
-   * - 暫停遊戲循環和更新
-   * - 確保遊戲引擎存在才執行
-   */
-  const handlePauseGame = () => {
-    if (gameEngineRef.current) {
-      gameEngineRef.current.pauseGame(); // 暫停遊戲
-    }
-  };
 
-  /**
-   * 繼續遊戲處理函數
-   * 
-   * 功能說明：
-   * - 調用遊戲引擎的繼續遊戲方法
-   * - 恢復遊戲循環和更新
-   * - 確保遊戲引擎存在才執行
-   */
-  const handleResumeGame = () => {
-    if (gameEngineRef.current) {
-      gameEngineRef.current.resumeGame(); // 繼續遊戲
-    }
-  };
 
   /**
    * 重新開始遊戲處理函數
@@ -127,6 +101,9 @@ const App: React.FC = () => {
       console.log('調用 restartGame');
       gameEngineRef.current.restartGame(); // 重新開始遊戲
       setIsGameStarted(true); // 確保遊戲狀態正確
+      // 立即更新 React 狀態，避免延遲
+      const state = gameEngineRef.current.getGameState();
+      setGameState(state);
       console.log('重新開始完成');
     } else {
       console.log('gameEngineRef.current 為 null');
@@ -153,7 +130,6 @@ const App: React.FC = () => {
    * 
    * 功能說明：
    * - 處理全局鍵盤輸入
-   * - 支持 ESC 鍵暫停/繼續遊戲
    * - 支持 R 鍵重新開始遊戲
    * - 阻止瀏覽器默認行為
    * 
@@ -163,18 +139,12 @@ const App: React.FC = () => {
     // 阻止瀏覽器默認行為，防止頁面滾動
     event.preventDefault();
     
-    // 處理 ESC 鍵：暫停/繼續遊戲
-    if (event.key === 'Escape') {
-      if (gameState?.state === 'playing') {
-        handlePauseGame(); // 暫停遊戲
-      } else if (gameState?.state === 'paused') {
-        handleResumeGame(); // 繼續遊戲
-      }
-    }
+    // 調試：記錄所有按鍵
+    console.log('按鍵被按下:', event.key, '遊戲狀態:', gameState?.state);
     
     // 添加 R 鍵重新開始功能
     if (event.key === 'r' || event.key === 'R') {
-      if (gameState?.state === 'over' || gameState?.state === 'paused') {
+      if (gameState?.state === 'over') {
         console.log('R 鍵重新開始被觸發');
         handleRestartGame();
       }
@@ -226,7 +196,7 @@ const App: React.FC = () => {
             ref={canvasRef}
             width={832}
             height={704}
-            className={`game-canvas ${gameState?.state === 'paused' ? 'paused' : ''}`}
+            className="game-canvas"
             style={{ border: '2px solid #333', backgroundColor: '#000' }}
           />
 
@@ -282,30 +252,6 @@ const App: React.FC = () => {
             </div>
           )}
           
-          {gameState?.state === 'paused' && (
-            <div className="menu-overlay">
-              <div className="menu-content">
-                <h2>遊戲暫停</h2>
-                <button onClick={handleResumeGame} className="menu-button">
-                  繼續遊戲
-                </button>
-                <button 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('重新開始按鈕被點擊 (暫停菜單)');
-                    handleRestartGame();
-                  }} 
-                  className="menu-button"
-                >
-                  重新開始
-                </button>
-                <button onClick={handleShowMenu} className="menu-button">
-                  主選單
-                </button>
-              </div>
-            </div>
-          )}
           
           {gameState?.state === 'over' && (
             <div className="menu-overlay">
@@ -325,7 +271,7 @@ const App: React.FC = () => {
                   }} 
                   className="menu-button"
                 >
-                  再玩一次
+                  再玩一次 (R)
                 </button>
                 <button onClick={handleShowMenu} className="menu-button">
                   主選單
@@ -339,7 +285,6 @@ const App: React.FC = () => {
         <div className="controls-info">
           <h3>通用控制</h3>
           <div className="control-section">
-            <p>暫停/繼續: ESC 鍵</p>
             <p>重新開始: R 鍵</p>
           </div>
         </div>

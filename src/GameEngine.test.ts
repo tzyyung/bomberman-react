@@ -74,22 +74,6 @@ describe('GameEngine', () => {
     expect(gameState.map).toBeDefined();
   });
 
-  test('should pause game', () => {
-    gameEngine.startGame();
-    gameEngine.pauseGame();
-    
-    const gameState = gameEngine.getGameState();
-    expect(gameState.state).toBe('paused');
-  });
-
-  test('should resume game', () => {
-    gameEngine.startGame();
-    gameEngine.pauseGame();
-    gameEngine.resumeGame();
-    
-    const gameState = gameEngine.getGameState();
-    expect(gameState.state).toBe('playing');
-  });
 
   test('should restart game', () => {
     gameEngine.startGame();

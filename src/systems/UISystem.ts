@@ -47,8 +47,6 @@ export class UISystem {
     // 根據遊戲狀態渲染不同的菜單
     if (gameState.state === 'menu') {
       this.renderMenu(ctx); // 主菜單
-    } else if (gameState.state === 'paused') {
-      this.renderPauseMenu(ctx); // 暫停菜單
     } else if (gameState.state === 'over') {
       this.renderGameOver(ctx, gameState); // 遊戲結束畫面
     }
@@ -156,31 +154,6 @@ export class UISystem {
     ctx.textAlign = 'left';
   }
 
-  private renderPauseMenu(ctx: CanvasRenderingContext2D): void {
-    // 半透明背景
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    
-    // 暫停標題
-    ctx.fillStyle = WHITE;
-    ctx.font = 'bold 36px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('遊戲暫停', ctx.canvas.width / 2, ctx.canvas.height / 2 - 60);
-    
-    // 按鈕
-    const buttons = [
-      { text: '繼續遊戲', action: 'resume' },
-      { text: '重新開始(R)', action: 'restart' },
-      { text: '主選單', action: 'menu' },
-    ];
-    
-    buttons.forEach((button, index) => {
-      const y = ctx.canvas.height / 2 - 20 + index * 60;
-      this.renderButton(ctx, button.text, ctx.canvas.width / 2, y, 200, 40);
-    });
-    
-    ctx.textAlign = 'left';
-  }
 
   private renderGameOver(ctx: CanvasRenderingContext2D, gameState: GameState): void {
     // 半透明背景

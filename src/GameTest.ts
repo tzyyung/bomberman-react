@@ -22,7 +22,6 @@ export class GameTest {
     this.testGameStart();
     this.testPlayerMovement();
     this.testBombPlacement();
-    this.testGamePause();
     
     console.log('✅ 所有測試完成！');
   }
@@ -99,18 +98,6 @@ export class GameTest {
     }, 100);
   }
 
-  private testGamePause(): void {
-    console.log('測試遊戲暫停...');
-    
-    this.gameEngine.pauseGame();
-    const gameState = this.gameEngine.getGameState();
-    
-    if (gameState.state === 'paused') {
-      console.log('✅ 遊戲暫停測試成功');
-    } else {
-      console.log('❌ 遊戲暫停測試失敗');
-    }
-  }
 
   public destroy(): void {
     this.gameEngine.destroy();

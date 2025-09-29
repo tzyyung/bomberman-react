@@ -120,7 +120,7 @@ export interface MapTile {
 
 // ==================== 遊戲狀態類型 ====================
 export interface GameState {
-  state: 'menu' | 'playing' | 'paused' | 'over';
+  state: 'menu' | 'playing' | 'over';
   winner: number | null;
   players: Player[];
   bombs: Bomb[];
