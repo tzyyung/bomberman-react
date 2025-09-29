@@ -329,9 +329,13 @@ export class GameEngine {
         
         // 檢查是否需要生成道具
         if (this.gameState.map[pos.y][pos.x].hasPowerUp) {
+          console.log(`GameEngine: 在位置 (${pos.x}, ${pos.y}) 生成道具`);
           const powerUp = this.systems.powerUp.generatePowerUpAt(pos.x, pos.y, this.gameState.map);
           if (powerUp) {
             this.gameState.powerUps.push(powerUp);
+            console.log(`GameEngine: 道具生成成功，類型: ${powerUp.type}`);
+          } else {
+            console.log(`GameEngine: 道具生成失敗`);
           }
           // 清除地圖上的道具標記
           this.gameState.map[pos.y][pos.x].hasPowerUp = false;

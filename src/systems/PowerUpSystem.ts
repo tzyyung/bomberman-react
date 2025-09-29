@@ -73,19 +73,32 @@ export class PowerUpSystem {
   }
 
   public generatePowerUpAt(x: number, y: number, map: MapTile[][]): PowerUp | null {
-    if (x < 0 || x >= map[0].length || y < 0 || y >= map.length) return null;
+    console.log(`PowerUpSystem: 嘗試在位置 (${x}, ${y}) 生成道具`);
+    
+    if (x < 0 || x >= map[0].length || y < 0 || y >= map.length) {
+      console.log(`PowerUpSystem: 位置超出地圖範圍`);
+      return null;
+    }
     
     const tile = map[y][x];
-    if (tile.type !== 0 || tile.hasPowerUp) return null; // 不是空地或已有道具
+    console.log(`PowerUpSystem: 地圖格子類型: ${tile.type}, 已有道具: ${tile.hasPowerUp}`);
+    
+    if (tile.type !== 0 || tile.hasPowerUp) {
+      console.log(`PowerUpSystem: 格子不是空地或已有道具，無法生成`);
+      return null; // 不是空地或已有道具
+    }
     
     // 隨機選擇道具類型
     const powerUpTypes = Object.values(PowerUpType).filter(v => typeof v === 'number') as PowerUpType[];
     const randomType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
     
+    console.log(`PowerUpSystem: 選擇道具類型: ${randomType}`);
+    
     const powerUp = this.createPowerUp(x, y, randomType);
     tile.hasPowerUp = true;
     tile.powerUpType = randomType;
     
+    console.log(`PowerUpSystem: 道具生成成功，ID: ${powerUp.id}`);
     return powerUp;
   }
 

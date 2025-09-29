@@ -96,12 +96,16 @@ export class BombSystem {
     explosionPositions.forEach(pos => {
       // 摧毀軟牆
       if (map[pos.y][pos.x].type === 2) { // SOFT_WALL
+        console.log(`軟牆被摧毀，位置: (${pos.x}, ${pos.y})`);
         map[pos.y][pos.x].type = 0; // EMPTY
         
-        // 30% 機率生成道具
-        if (Math.random() < 0.3) {
+        // 50% 機率生成道具
+        if (Math.random() < 0.5) {
+          console.log(`軟牆爆炸生成道具，位置: (${pos.x}, ${pos.y})`);
           // 道具生成將在 GameEngine 中處理
           map[pos.y][pos.x].hasPowerUp = true;
+        } else {
+          console.log(`軟牆爆炸沒有生成道具，位置: (${pos.x}, ${pos.y})`);
         }
       }
     });
