@@ -3,7 +3,7 @@
  * 負責管理遊戲狀態、更新和渲染
  */
 
-import { GameState, InputEvent, GameConfig } from './types';
+import { GameState, InputEvent, GameConfig, Player } from './types';
 import { Direction, MAP_WIDTH, MAP_HEIGHT, TILE_SIZE, PLAYER_SPEED, BOMB_TIMER, EXPLOSION_DURATION } from './constants';
 import { MapSystem } from './systems/MapSystem';
 import { PlayerSystem } from './systems/PlayerSystem';
@@ -30,6 +30,10 @@ export class GameEngine {
   private inputQueue: InputEvent[] = [];
   private worker: Worker | null = null;
   private useWorker: boolean = true;
+  private useHybridMode: boolean = true;
+  private batchInputs: InputEvent[] = [];
+  private lastInputTime: number = 0;
+  private lastFrameTime: number = 0;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -322,19 +326,84 @@ export class GameEngine {
     const deltaTime = currentTime - this.lastTime;
     this.lastTime = currentTime;
 
-    if (!this.gameState.paused) {
-      this.update(deltaTime);
+    // 限制更新頻率到 60 FPS
+    if (deltaTime >= 16.67) {
+      if (!this.gameState.paused) {
+        this.update(deltaTime);
+      }
+      
+      this.render();
+      this.monitorPerformance();
     }
     
-    this.render();
-    
     this.animationId = requestAnimationFrame(() => this.gameLoop());
+  }
+
+  private monitorPerformance(): void {
+    const fps = 1000 / (performance.now() - this.lastFrameTime);
+    this.lastFrameTime = performance.now();
+    
+    if (fps < 55) {
+      console.warn('FPS 過低:', fps.toFixed(1));
+    }
   }
 
   private update(deltaTime: number): void {
     // 處理輸入
     this.processInput();
     
+    if (this.useHybridMode) {
+      // 混合模式：主線程處理移動，Worker 處理其他邏輯
+      this.updatePlayerMovement(deltaTime);
+      
+      if (this.worker && this.useWorker) {
+        // 發送其他邏輯到 Worker
+        this.worker.postMessage({
+          type: 'UPDATE_LOGIC',
+          data: { deltaTime, gameState: this.gameState }
+        });
+      } else {
+        // 回退到主線程處理所有邏輯
+        this.updateGameLogic(deltaTime);
+      }
+    } else {
+      // 傳統模式：主線程處理所有邏輯
+      this.updateGameLogic(deltaTime);
+    }
+  }
+
+  private updatePlayerMovement(deltaTime: number): void {
+    // 主線程處理玩家移動
+    this.gameState.players.forEach(player => {
+      if (!player.alive) return;
+      
+      this.updatePlayerPositionSmooth(player, deltaTime);
+    });
+  }
+
+  private updatePlayerPositionSmooth(player: Player, deltaTime: number): void {
+    // 平滑移動到目標位置
+    const targetX = player.gridX * TILE_SIZE + TILE_SIZE / 2;
+    const targetY = player.gridY * TILE_SIZE + TILE_SIZE / 2;
+    
+    const dx = targetX - player.pixelX;
+    const dy = targetY - player.pixelY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    if (distance > 0.5) {
+      const moveSpeed = player.speed * 0.2; // 調整移動速度
+      const moveX = (dx / distance) * moveSpeed * deltaTime;
+      const moveY = (dy / distance) * moveSpeed * deltaTime;
+      
+      player.pixelX += moveX;
+      player.pixelY += moveY;
+    } else {
+      player.pixelX = targetX;
+      player.pixelY = targetY;
+    }
+  }
+
+  private updateGameLogic(deltaTime: number): void {
     // 更新玩家
     this.systems.player.updatePlayers(this.gameState.players, this.gameState.map, deltaTime);
     
@@ -393,17 +462,88 @@ export class GameEngine {
     while (this.inputQueue.length > 0) {
       const input = this.inputQueue.shift()!;
       
-      if (this.worker && this.useWorker) {
-        // 發送到 Web Worker
-        this.worker.postMessage({
-          type: 'INPUT',
-          data: input
-        });
+      if (this.useHybridMode && input.action === 'move') {
+        // 混合模式：主線程立即處理移動
+        this.handleImmediateMovement(input);
+      } else if (this.worker && this.useWorker) {
+        // 其他輸入發送到 Web Worker
+        this.batchInputs.push(input);
+        
+        if (this.batchInputs.length >= 3 || Date.now() - this.lastInputTime > 16) {
+          this.worker.postMessage({
+            type: 'BATCH_INPUT',
+            data: this.batchInputs
+          });
+          this.batchInputs = [];
+          this.lastInputTime = Date.now();
+        }
       } else {
         // 主線程處理
         this.handleInput(input);
       }
     }
+  }
+
+  private handleImmediateMovement(input: InputEvent): void {
+    const player = this.gameState.players.find(p => p.id === input.playerId);
+    if (!player || !player.alive || input.direction === undefined) return;
+    
+    // 立即處理移動，不等待 Worker
+    this.updatePlayerPositionImmediate(player, input.direction);
+    
+    // 同時發送到 Worker 進行同步
+    if (this.worker && this.useWorker) {
+      this.worker.postMessage({
+        type: 'INPUT',
+        data: input
+      });
+    }
+  }
+
+  private updatePlayerPositionImmediate(player: Player, direction: Direction): void {
+    // 檢查玩家是否已經在移動中
+    const targetX = player.gridX * TILE_SIZE + TILE_SIZE / 2;
+    const targetY = player.gridY * TILE_SIZE + TILE_SIZE / 2;
+    const dx = targetX - player.pixelX;
+    const dy = targetY - player.pixelY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    // 如果玩家還在移動中，不允許新的移動
+    if (distance > 2) return;
+    
+    let newX = player.gridX;
+    let newY = player.gridY;
+    
+    switch (direction) {
+      case Direction.UP:
+        newY = player.gridY - 1;
+        break;
+      case Direction.DOWN:
+        newY = player.gridY + 1;
+        break;
+      case Direction.LEFT:
+        newX = player.gridX - 1;
+        break;
+      case Direction.RIGHT:
+        newX = player.gridX + 1;
+        break;
+    }
+    
+    // 檢查是否可以移動到新位置
+    if (this.canMoveToImmediate(newX, newY)) {
+      player.gridX = newX;
+      player.gridY = newY;
+      player.direction = direction;
+    }
+  }
+
+  private canMoveToImmediate(x: number, y: number): boolean {
+    if (x < 0 || x >= this.gameState.map[0].length || y < 0 || y >= this.gameState.map.length) {
+      return false;
+    }
+    
+    const tile = this.gameState.map[y][x];
+    return tile.type === 0 || tile.type === 5; // EMPTY or POWERUP
   }
 
   private handleInput(input: InputEvent): void {

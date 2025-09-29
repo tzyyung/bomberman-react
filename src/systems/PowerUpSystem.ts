@@ -21,7 +21,6 @@ export class PowerUpSystem {
     };
   }
 
-
   public updatePowerUps(powerUps: PowerUp[], players: Player[]): void {
     // 移除已收集的道具
     for (let i = powerUps.length - 1; i >= 0; i--) {
@@ -150,4 +149,3 @@ export class PowerUpSystem {
     return descriptions[type] || '未知效果';
   }
 }
-
