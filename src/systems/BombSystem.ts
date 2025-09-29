@@ -40,6 +40,9 @@ export class BombSystem {
     
     console.log(`玩家 ${player.id} 放置炸彈，威力: ${bomb.power}`);
     
+    // 更新地圖格子類型為炸彈
+    map[player.gridY][player.gridX].type = 3; // BOMB
+    
     bombs.push(bomb);
     player.bombCount++;
     player.lastBombTime = Date.now();
@@ -68,6 +71,9 @@ export class BombSystem {
 
   private explodeBomb(bomb: Bomb, bombs: Bomb[], map: MapTile[][], players: Player[]): Array<{x: number, y: number}> {
     bomb.exploded = true;
+    
+    // 恢復地圖格子類型為空地
+    map[bomb.gridY][bomb.gridX].type = 0; // EMPTY
     
     // 減少玩家炸彈計數
     const owner = players.find(p => p.id === bomb.ownerId);
@@ -176,11 +182,18 @@ export class BombSystem {
     
     // 檢查是否可以移動
     if (this.canMoveBombTo(newX, newY, map)) {
+      // 恢復原位置的地圖格子類型
+      map[bomb.gridY][bomb.gridX].type = 0; // EMPTY
+      
+      // 更新炸彈位置
       bomb.gridX = newX;
       bomb.gridY = newY;
       bomb.pixelX = newX * TILE_SIZE + TILE_SIZE / 2;
       bomb.pixelY = newY * TILE_SIZE + TILE_SIZE / 2;
       bomb.kickDistance++;
+      
+      // 更新新位置的地圖格子類型
+      map[newY][newX].type = 3; // BOMB
     } else {
       bomb.kicked = false;
       bomb.kickDirection = null;
