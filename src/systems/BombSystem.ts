@@ -226,46 +226,6 @@ export class BombSystem {
     return tile.type === 0; // EMPTY
   }
 
-  private moveBombToPlayerFront(bomb: Bomb, player: Player, map: MapTile[][]): void {
-    // 計算玩家面前的位置
-    let frontX = player.gridX;
-    let frontY = player.gridY;
-    
-    switch (player.direction) {
-      case Direction.UP:
-        frontY = player.gridY - 1;
-        break;
-      case Direction.DOWN:
-        frontY = player.gridY + 1;
-        break;
-      case Direction.LEFT:
-        frontX = player.gridX - 1;
-        break;
-      case Direction.RIGHT:
-        frontX = player.gridX + 1;
-        break;
-    }
-    
-    // 檢查玩家面前的位置是否可以放置炸彈
-    if (this.canMoveBombTo(frontX, frontY, map)) {
-      // 恢復原位置的地圖格子類型
-      map[bomb.gridY][bomb.gridX].type = 0; // EMPTY
-      
-      // 移動炸彈到玩家面前
-      bomb.gridX = frontX;
-      bomb.gridY = frontY;
-      bomb.pixelX = frontX * TILE_SIZE + TILE_SIZE / 2;
-      bomb.pixelY = frontY * TILE_SIZE + TILE_SIZE / 2;
-      
-      // 更新新位置的地圖格子類型
-      map[frontY][frontX].type = 3; // BOMB
-      
-      console.log(`炸彈移動到玩家面前位置: (${frontX}, ${frontY})`);
-    } else {
-      console.log(`玩家面前位置 (${frontX}, ${frontY}) 無法放置炸彈`);
-    }
-  }
-
   private findBombNearPlayer(player: Player, bombs: Bomb[]): Bomb | null {
     // 檢查玩家當前位置是否有炸彈
     let bomb = bombs.find(b => 
@@ -348,6 +308,46 @@ export class BombSystem {
     if (bomb) {
       bomb.chainExplode = true;
       player.lastRemoteTime = Date.now();
+    }
+  }
+
+  private moveBombToPlayerFront(bomb: Bomb, player: Player, map: MapTile[][]): void {
+    // 計算玩家面前前進1格的位置
+    let targetX = player.gridX;
+    let targetY = player.gridY;
+    
+    switch (player.direction) {
+      case Direction.UP:
+        targetY = player.gridY - 1;
+        break;
+      case Direction.DOWN:
+        targetY = player.gridY + 1;
+        break;
+      case Direction.LEFT:
+        targetX = player.gridX - 1;
+        break;
+      case Direction.RIGHT:
+        targetX = player.gridX + 1;
+        break;
+    }
+    
+    // 檢查目標位置是否可以放置炸彈
+    if (this.canMoveBombTo(targetX, targetY, map)) {
+      // 恢復原位置的地圖格子類型
+      map[bomb.gridY][bomb.gridX].type = 0; // EMPTY
+      
+      // 移動炸彈到目標位置
+      bomb.gridX = targetX;
+      bomb.gridY = targetY;
+      bomb.pixelX = targetX * TILE_SIZE + TILE_SIZE / 2;
+      bomb.pixelY = targetY * TILE_SIZE + TILE_SIZE / 2;
+      
+      // 更新新位置的地圖格子類型
+      map[targetY][targetX].type = 3; // BOMB
+      
+      console.log(`炸彈移動到玩家面前前進1格位置: (${targetX}, ${targetY})`);
+    } else {
+      console.log(`玩家面前前進1格位置 (${targetX}, ${targetY}) 無法放置炸彈`);
     }
   }
 
