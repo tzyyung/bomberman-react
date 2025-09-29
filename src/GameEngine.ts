@@ -28,11 +28,6 @@ export class GameEngine {
   private lastTime: number = 0;
   private animationId: number | null = null;
   private inputQueue: InputEvent[] = [];
-  private worker: Worker | null = null;
-  private useWorker: boolean = true;
-  private useHybridMode: boolean = true;
-  private batchInputs: InputEvent[] = [];
-  private lastInputTime: number = 0;
   private lastFrameTime: number = 0;
 
   constructor(canvas: HTMLCanvasElement) {
@@ -81,39 +76,9 @@ export class GameEngine {
       ui: new UISystem(),
     };
 
-    // 初始化 Web Worker
-    this.initWorker();
-
     this.setupEventListeners();
   }
 
-  private initWorker(): void {
-    if (typeof Worker !== 'undefined' && this.useWorker) {
-      try {
-        this.worker = new Worker('/game-worker.js');
-        
-        this.worker.onmessage = (e) => {
-          const { type, gameState } = e.data;
-          
-          if (type === 'GAME_UPDATE' && gameState) {
-            this.gameState = gameState;
-          }
-        };
-        
-        this.worker.onerror = (error) => {
-          console.warn('Web Worker 初始化失敗，回退到主線程模式:', error);
-          this.useWorker = false;
-          this.worker = null;
-        };
-      } catch (error) {
-        console.warn('Web Worker 不支持，回退到主線程模式:', error);
-        this.useWorker = false;
-        this.worker = null;
-      }
-    } else {
-      this.useWorker = false;
-    }
-  }
 
   private setupEventListeners(): void {
     // 鍵盤事件監聽
@@ -240,57 +205,24 @@ export class GameEngine {
   public startGame(): void {
     this.initializeGame();
     this.gameState.state = 'playing';
-    
-    if (this.worker && this.useWorker) {
-      // 使用 Web Worker
-      this.worker.postMessage({
-        type: 'INIT',
-        data: {
-          gameState: this.gameState,
-          systems: this.systems
-        }
-      });
-    } else {
-      // 回退到主線程
-      this.gameLoop();
-    }
+    this.gameLoop();
   }
 
   public pauseGame(): void {
     this.gameState.paused = true;
     this.gameState.state = 'paused';
-    
-    if (this.worker && this.useWorker) {
-      this.worker.postMessage({ type: 'PAUSE' });
-    }
   }
 
   public resumeGame(): void {
     this.gameState.paused = false;
     this.gameState.state = 'playing';
-    
-    if (this.worker && this.useWorker) {
-      this.worker.postMessage({ type: 'RESUME' });
-    } else {
-      this.gameLoop();
-    }
+    this.gameLoop();
   }
 
   public restartGame(): void {
     this.initializeGame();
     this.gameState.state = 'playing';
-    
-    if (this.worker && this.useWorker) {
-      this.worker.postMessage({
-        type: 'INIT',
-        data: {
-          gameState: this.gameState,
-          systems: this.systems
-        }
-      });
-    } else {
-      this.gameLoop();
-    }
+    this.gameLoop();
   }
 
   public showMenu(): void {
@@ -326,15 +258,12 @@ export class GameEngine {
     const deltaTime = currentTime - this.lastTime;
     this.lastTime = currentTime;
 
-    // 限制更新頻率到 60 FPS
-    if (deltaTime >= 16.67) {
-      if (!this.gameState.paused) {
-        this.update(deltaTime);
-      }
-      
-      this.render();
-      this.monitorPerformance();
+    if (!this.gameState.paused) {
+      this.update(deltaTime);
     }
+    
+    this.render();
+    this.monitorPerformance();
     
     this.animationId = requestAnimationFrame(() => this.gameLoop());
   }
@@ -352,58 +281,6 @@ export class GameEngine {
     // 處理輸入
     this.processInput();
     
-    if (this.useHybridMode) {
-      // 混合模式：主線程處理移動，Worker 處理其他邏輯
-      this.updatePlayerMovement(deltaTime);
-      
-      if (this.worker && this.useWorker) {
-        // 發送其他邏輯到 Worker
-        this.worker.postMessage({
-          type: 'UPDATE_LOGIC',
-          data: { deltaTime, gameState: this.gameState }
-        });
-      } else {
-        // 回退到主線程處理所有邏輯
-        this.updateGameLogic(deltaTime);
-      }
-    } else {
-      // 傳統模式：主線程處理所有邏輯
-      this.updateGameLogic(deltaTime);
-    }
-  }
-
-  private updatePlayerMovement(deltaTime: number): void {
-    // 主線程處理玩家移動
-    this.gameState.players.forEach(player => {
-      if (!player.alive) return;
-      
-      this.updatePlayerPositionSmooth(player, deltaTime);
-    });
-  }
-
-  private updatePlayerPositionSmooth(player: Player, deltaTime: number): void {
-    // 平滑移動到目標位置
-    const targetX = player.gridX * TILE_SIZE + TILE_SIZE / 2;
-    const targetY = player.gridY * TILE_SIZE + TILE_SIZE / 2;
-    
-    const dx = targetX - player.pixelX;
-    const dy = targetY - player.pixelY;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    
-    if (distance > 0.5) {
-      const moveSpeed = player.speed * 0.2; // 調整移動速度
-      const moveX = (dx / distance) * moveSpeed * deltaTime;
-      const moveY = (dy / distance) * moveSpeed * deltaTime;
-      
-      player.pixelX += moveX;
-      player.pixelY += moveY;
-    } else {
-      player.pixelX = targetX;
-      player.pixelY = targetY;
-    }
-  }
-
-  private updateGameLogic(deltaTime: number): void {
     // 更新玩家
     this.systems.player.updatePlayers(this.gameState.players, this.gameState.map, deltaTime);
     
@@ -458,93 +335,14 @@ export class GameEngine {
     this.checkGameEnd();
   }
 
+
   private processInput(): void {
     while (this.inputQueue.length > 0) {
       const input = this.inputQueue.shift()!;
-      
-      if (this.useHybridMode && input.action === 'move') {
-        // 混合模式：主線程立即處理移動
-        this.handleImmediateMovement(input);
-      } else if (this.worker && this.useWorker) {
-        // 其他輸入發送到 Web Worker
-        this.batchInputs.push(input);
-        
-        if (this.batchInputs.length >= 3 || Date.now() - this.lastInputTime > 16) {
-          this.worker.postMessage({
-            type: 'BATCH_INPUT',
-            data: this.batchInputs
-          });
-          this.batchInputs = [];
-          this.lastInputTime = Date.now();
-        }
-      } else {
-        // 主線程處理
-        this.handleInput(input);
-      }
+      this.handleInput(input);
     }
   }
 
-  private handleImmediateMovement(input: InputEvent): void {
-    const player = this.gameState.players.find(p => p.id === input.playerId);
-    if (!player || !player.alive || input.direction === undefined) return;
-    
-    // 立即處理移動，不等待 Worker
-    this.updatePlayerPositionImmediate(player, input.direction);
-    
-    // 同時發送到 Worker 進行同步
-    if (this.worker && this.useWorker) {
-      this.worker.postMessage({
-        type: 'INPUT',
-        data: input
-      });
-    }
-  }
-
-  private updatePlayerPositionImmediate(player: Player, direction: Direction): void {
-    // 檢查玩家是否已經在移動中
-    const targetX = player.gridX * TILE_SIZE + TILE_SIZE / 2;
-    const targetY = player.gridY * TILE_SIZE + TILE_SIZE / 2;
-    const dx = targetX - player.pixelX;
-    const dy = targetY - player.pixelY;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    
-    // 如果玩家還在移動中，不允許新的移動
-    if (distance > 2) return;
-    
-    let newX = player.gridX;
-    let newY = player.gridY;
-    
-    switch (direction) {
-      case Direction.UP:
-        newY = player.gridY - 1;
-        break;
-      case Direction.DOWN:
-        newY = player.gridY + 1;
-        break;
-      case Direction.LEFT:
-        newX = player.gridX - 1;
-        break;
-      case Direction.RIGHT:
-        newX = player.gridX + 1;
-        break;
-    }
-    
-    // 檢查是否可以移動到新位置
-    if (this.canMoveToImmediate(newX, newY)) {
-      player.gridX = newX;
-      player.gridY = newY;
-      player.direction = direction;
-    }
-  }
-
-  private canMoveToImmediate(x: number, y: number): boolean {
-    if (x < 0 || x >= this.gameState.map[0].length || y < 0 || y >= this.gameState.map.length) {
-      return false;
-    }
-    
-    const tile = this.gameState.map[y][x];
-    return tile.type === 0 || tile.type === 5; // EMPTY or POWERUP
-  }
 
   private handleInput(input: InputEvent): void {
     const player = this.gameState.players.find(p => p.id === input.playerId);
@@ -673,11 +471,6 @@ export class GameEngine {
   public destroy(): void {
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);
-    }
-    
-    if (this.worker) {
-      this.worker.terminate();
-      this.worker = null;
     }
     
     document.removeEventListener('keydown', this.handleKeyDown);

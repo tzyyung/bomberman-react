@@ -50,13 +50,16 @@ export class PlayerSystem {
     const dy = targetY - player.pixelY;
     const distance = Math.sqrt(dx * dx + dy * dy);
     
-    if (distance > 1) {
-      const moveX = (dx / distance) * player.speed * deltaTime * 0.1;
-      const moveY = (dy / distance) * player.speed * deltaTime * 0.1;
+    if (distance > 0.5) {
+      // 優化移動速度計算
+      const moveSpeed = player.speed * 0.15; // 調整移動速度
+      const moveX = (dx / distance) * moveSpeed * deltaTime;
+      const moveY = (dy / distance) * moveSpeed * deltaTime;
       
       player.pixelX += moveX;
       player.pixelY += moveY;
     } else {
+      // 直接設置到目標位置，避免微小抖動
       player.pixelX = targetX;
       player.pixelY = targetY;
     }
